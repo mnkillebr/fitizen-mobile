@@ -1,74 +1,84 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { Image, StyleSheet, Platform, Text, View, FlatList, RefreshControl } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ThemedSafeAreaView } from '@/components/ThemeSafeAreaView';
+import ProgramCard from '@/components/ProgramCard';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import { SearchBar } from '@/components/SearchBar';
+import { useState } from 'react';
 
-export default function HomeScreen() {
+const placeholderPrograms = [
+  {
+    id: '58694a0f-3da1-471f-bd96-145571e29d72',
+    s3ImageKey: 'https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/s2j4mlhnvppquh8j9jk9',
+    name: 'Pre/Post-Natal Program',
+    difficulty: 'Beginner',
+    placeholder: 'Coming Soon',
+    opacity: 0.65,
+  },
+  {
+    id: '58654a0f-3da1-471f-bd96-145571e29d72',
+    s3ImageKey: 'https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gsncbv3ba7lpycpp7jc0',
+    name: 'Intro to Boxing',
+    difficulty: 'Beginner',
+    placeholder: 'Coming Soon',
+    opacity: 0.65,
+  },
+];
+
+type ItemProps = {
+  imageUrl?: string;
+  title: string;
+  difficulty?: string;
+  placeholder?: string;
+};
+
+const Item = ({title}: ItemProps) => (
+  <View className='h-48 bg-slate-400 rounded my-2'>
+    <Text>{title}</Text>
+  </View>
+);
+
+export default function ProgramsScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const {
+    data: programs,
+    isLoading,
+    error,
+    refetch,
+    isRefetching
+  } = useQuery({
+    queryKey: ['programs', searchQuery],
+    queryFn: () => api.programs.list(searchQuery)
+  });
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <ThemedSafeAreaView className='flex-1'>
+      <ThemedView className='px-4 h-full'>
+        {/* <ThemedText className='font-bold text-center'>Programs</ThemedText> */}
+        <SearchBar
+          placeholder='Search Programs ...'
+          onSearch={setSearchQuery}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+        <FlatList
+          data={programs ? [...programs, ...placeholderPrograms] : placeholderPrograms}
+          renderItem={({item}) => <ProgramCard {...item} />}
+          keyExtractor={item => item.id}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+            />
+          }
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+        />
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    </ThemedSafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
