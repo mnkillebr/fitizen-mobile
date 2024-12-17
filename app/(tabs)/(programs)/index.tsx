@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, Text, View, FlatList, RefreshControl } from 'react-native';
+import { Image, StyleSheet, Platform, Text, View, FlatList, RefreshControl, Pressable } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { SearchBar } from '@/components/SearchBar';
 import { useState } from 'react';
+import { router, Link } from 'expo-router';
 
 const placeholderPrograms = [
   {
@@ -66,7 +67,23 @@ export default function ProgramsScreen() {
         />
         <FlatList
           data={programs ? [...programs, ...placeholderPrograms] : placeholderPrograms}
-          renderItem={({item}) => <ProgramCard {...item} />}
+          renderItem={({item}) => (
+            <Link
+              href={{
+                pathname: '/(tabs)/(programs)/[programId]',
+                params: { programId: item.id }
+              }}
+              asChild
+            >
+              <Pressable
+                style={({ pressed }) => [
+                  { opacity: pressed ? 0.7 : 1 },
+                ]}
+              >
+                <ProgramCard {...item} />
+              </Pressable>
+            </Link>
+          )}
           keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}
           refreshControl={

@@ -27,21 +27,21 @@ export default function TabLayout() {
         }),
       }}>
       <Tabs.Screen
-        name="index"
+        name="(programs)"
         options={{
           title: 'Programs',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="table.fill" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="workouts"
+        name="(workouts)"
         options={{
           title: 'Workouts',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="figure.highintensity.intervaltraining" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="library"
+        name="(exercises)"
         options={{
           title: 'Exercises',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="book.pages.fill" color={color} />,

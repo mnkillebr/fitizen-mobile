@@ -19,6 +19,12 @@ export const api = {
       if (!response.ok) throw new Error('Failed to fetch programs');
       return response.json();
     },
+    programDetail: async (programId: string) => {
+      const url = `${DEV_API_URL}/api/mobile/programs/${programId}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch program');
+      return response.json();
+    },
     create: async (programData: any) => {
       const response = await fetch(`${DEV_API_URL}/api/mobile/programs`, {
         method: 'POST',
@@ -39,6 +45,12 @@ export const api = {
       if (!response.ok) throw new Error('Failed to fetch workouts');
       return response.json();
     },
+    workoutDetail: async (workoutId: string) => {
+      const url = `${DEV_API_URL}/api/mobile/workouts/${workoutId}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch workout');
+      return response.json();
+    },
   },
   exercises: {
     list: async ({ query, page, limit }: { 
@@ -55,6 +67,12 @@ export const api = {
       const url = `${DEV_API_URL}/api/mobile/exercises?${params}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch exercises');
+      return response.json();
+    },
+    exerciseDetail: async (exerciseId: string) => {
+      const url = `${DEV_API_URL}/api/mobile/exercises/${exerciseId}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch exercise');
       return response.json();
     },
   },

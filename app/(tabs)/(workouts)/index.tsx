@@ -9,6 +9,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { Link } from 'expo-router';
 
 export default function WorkoutsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,21 +33,35 @@ export default function WorkoutsScreen() {
         <FlatList
           data={workouts ?? []}
           renderItem={({ item }) => (
-            <View className="h-56 relative rounded-lg bg-slate-50 overflow-hidden my-2">
-              <ImageBackground
-                source={{ uri: item.thumbnail ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/cld-sample-3.jpg" }}
-                style={styles.backgroundImage}
+            <Link
+              href={{
+                pathname: '/(tabs)/(workouts)/[workoutId]',
+                params: { workoutId: item.id }
+              }}
+              asChild
+            >
+              <Pressable
+                style={({ pressed }) => [
+                  { opacity: pressed ? 0.7 : 1 },
+                ]}
               >
-                {/* Top Left Text */}
-                <View className="absolute bottom-2 left-2 p-2 flex flex-col items-start">
-                  <Text className="font-bold text-white">{item.name}</Text>
-                  {/* <View className="flex flex-row gap-2">
-                    <Text className="text-white">Difficulty:</Text>
-                    <Text className="italic text-white">{difficulty}</Text>
-                  </View> */}
+                <View className="h-56 relative rounded-lg bg-slate-50 overflow-hidden my-2">
+                  <ImageBackground
+                    source={{ uri: item.thumbnail ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/cld-sample-3.jpg" }}
+                    style={styles.backgroundImage}
+                  >
+                    {/* Top Left Text */}
+                    <View className="absolute bottom-2 left-2 p-2 flex flex-col items-start">
+                      <Text className="font-bold text-white">{item.name}</Text>
+                      {/* <View className="flex flex-row gap-2">
+                        <Text className="text-white">Difficulty:</Text>
+                        <Text className="italic text-white">{difficulty}</Text>
+                      </View> */}
+                    </View>
+                  </ImageBackground>
                 </View>
-              </ImageBackground>
-            </View>
+              </Pressable>
+            </Link>
           )}
           keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}

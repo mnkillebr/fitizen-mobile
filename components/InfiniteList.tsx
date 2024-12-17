@@ -1,4 +1,4 @@
-import { FlatList, ActivityIndicator, View } from 'react-native';
+import { FlatList, ActivityIndicator, View, RefreshControl } from 'react-native';
 import { SearchBar } from './SearchBar';
 import { SkeletonItem } from './SkeletonItem';
 
@@ -12,6 +12,8 @@ type InfiniteListProps<T> = {
   searchPlaceholder?: string;
   ListEmptyComponent?: React.ReactNode;
   keyExtractor: (item: T) => string;
+  refetch: () => void;
+  isRefetching: boolean;
 };
 
 export function InfiniteList<T>({
@@ -24,6 +26,8 @@ export function InfiniteList<T>({
   searchPlaceholder,
   ListEmptyComponent,
   keyExtractor,
+  refetch,
+  isRefetching,
 }: InfiniteListProps<T>) {
   if (isLoading) {
     return (
@@ -53,6 +57,12 @@ export function InfiniteList<T>({
           isFetchingNextPage ? (
             <ActivityIndicator style={{ padding: 16 }} />
           ) : null
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+          />
         }
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"

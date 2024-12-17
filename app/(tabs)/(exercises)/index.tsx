@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, Text, View, ImageBackground } from 'react-native';
+import { Image, StyleSheet, Platform, Text, View, ImageBackground, Pressable } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -8,6 +8,7 @@ import { ThemedSafeAreaView } from '@/components/ThemeSafeAreaView';
 import { useState } from 'react';
 import { useInfiniteExercises } from '@/hooks/useInfiniteQuery';
 import { InfiniteList } from '@/components/InfiniteList';
+import { Link } from 'expo-router';
 
 export default function LibraryScreen() {
   const [query, setQuery] = useState('');
@@ -24,6 +25,8 @@ export default function LibraryScreen() {
     fetchPreviousPage,
     hasNextPage,
     hasPreviousPage,
+    refetch,
+    isRefetching
   } = useInfiniteExercises(query);
 
   const flatData = data?.pages.flatMap(page => page.exercises) ?? [];
@@ -34,21 +37,35 @@ export default function LibraryScreen() {
         <InfiniteList
           data={flatData}
           renderItem={({ item }) => (
-            <View className="h-56 relative rounded-lg bg-slate-50 overflow-hidden my-2">
-              <ImageBackground
-                source={{ uri: item.thumbnail }}
-                style={styles.backgroundImage}
+            <Link
+              href={{
+                pathname: '/(tabs)/(exercises)/[exerciseId]',
+                params: { exerciseId: item.id }
+              }}
+              asChild
+            >
+              <Pressable
+                style={({ pressed }) => [
+                  { opacity: pressed ? 0.7 : 1 },
+                ]}
               >
-                {/* Top Left Text */}
-                <View className="absolute bottom-2 left-2 p-2 flex flex-col items-start">
-                  <Text className="font-bold text-white">{item.name}</Text>
-                  {/* <View className="flex flex-row gap-2">
-                    <Text className="text-white">Difficulty:</Text>
-                    <Text className="italic text-white">{difficulty}</Text>
-                  </View> */}
+                <View className="h-56 relative rounded-lg bg-slate-50 overflow-hidden my-2">
+                  <ImageBackground
+                    source={{ uri: item.thumbnail }}
+                    style={styles.backgroundImage}
+                  >
+                    {/* Top Left Text */}
+                    <View className="absolute bottom-2 left-2 p-2 flex flex-col items-start">
+                      <Text className="font-bold text-white">{item.name}</Text>
+                      {/* <View className="flex flex-row gap-2">
+                        <Text className="text-white">Difficulty:</Text>
+                        <Text className="italic text-white">{difficulty}</Text>
+                      </View> */}
+                    </View>
+                  </ImageBackground>
                 </View>
-              </ImageBackground>
-            </View>
+              </Pressable>
+            </Link>
           )}
           onSearch={setQuery}
           onLoadMore={fetchNextPage}
@@ -56,6 +73,8 @@ export default function LibraryScreen() {
           isFetchingNextPage={isFetchingNextPage}
           searchPlaceholder="Search exercises..."
           keyExtractor={(item) => item.id}
+          refetch={refetch}
+          isRefetching={isRefetching}
         />
       </ThemedView>
     </ThemedSafeAreaView>
