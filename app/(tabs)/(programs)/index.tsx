@@ -73,6 +73,7 @@ export default function ProgramsScreen() {
                 pathname: '/(tabs)/(programs)/[programId]',
                 params: { programId: item.id }
               }}
+              disabled={!!item.opacity}
               asChild
             >
               <Pressable
