@@ -134,18 +134,18 @@ export default function ProgramDetail() {
                 setPage(index)
               }}
               renderItem={({ item }) => (
-                <View className="h-56 px-4 justify-center">
-                  {item.title ? <ThemedText className="text-center" type="title" lightColor="#eeeeec">{program?.name || 'Program Details'}</ThemedText> : null}
+                <View className="h-52 px-4 justify-center">
+                  {item.title ? <ThemedText className="text-center" type="title" lightColor="#eeeeec" style={styles.title}>{program?.name || 'Program Details'}</ThemedText> : null}
                   {item.subTitle ? (
                     <>
-                      <ThemedText type="subtitle" className="text-center mb-2" lightColor="#eeeeec">{item.subTitle}</ThemedText>
-                      <ThemedText type="default" className="text-center" lightColor="#eeeeec">{item.description}</ThemedText>
+                      <ThemedText type="subtitle" className="text-center mb-2" lightColor="#eeeeec" style={styles.title}>{item.subTitle}</ThemedText>
+                      <ThemedText type="default" className="text-center" style={{ ...styles.text, lineHeight: 20 }} lightColor="#eeeeec">{item.description}</ThemedText>
                     </>
                   ) : null}
                 </View>
               )}
             />
-            <View className="flex flex-row mt-60 mb-2 justify-center gap-2">
+            <View className="flex flex-row mt-56 mb-2 justify-center gap-2">
               {carouselData.map((item, idx) => (
                 <Pressable
                   key={idx}
@@ -169,8 +169,18 @@ export default function ProgramDetail() {
               <ThemedText type="subtitle" className="text-center">Start Program</ThemedText>
               <View className="bg-yellow-400 rounded-full"><Icon size={24} source="play" /></View>
             </View> */}
+            <View className="py-2 px-4 flex-row items-center gap-3">
+              <ThemedText lightColor="#eeeeec" style={styles.text}>Difficulty</ThemedText>
+              <View className="flex-row">
+                <Icon source="fire" size={14} color={Colors[colorScheme ?? 'light'].tint} />
+                <Icon source="fire" size={14} color={Colors[colorScheme ?? 'light'].tint} />
+                <Icon source="fire" size={14} color="#e4e3e0" />
+                <Icon source="fire" size={14} color="#e4e3e0" />
+                <Icon source="fire" size={14} color="#e4e3e0" />
+              </View>
+            </View>
             <View className="py-2 px-4">
-              <ThemedText lightColor="#eeeeec">Program Completion - 42%</ThemedText>
+              <ThemedText lightColor="#eeeeec" style={styles.text}>Program Completion - 42%</ThemedText>
               <ProgressBar progress={0.42} color={Colors[colorScheme ?? 'light'].tint} />
             </View>
             <View>
@@ -205,7 +215,11 @@ export default function ProgramDetail() {
                       <View className="flex-1 flex-col gap-3">
                         {week.days.map(day => (
                           <Pressable onPress={() => {
-                            
+                            setOpenDialog({
+                              open: true,
+                              title: `Week ${week.weekNumber} - Day ${day.dayNumber}`,
+                              content: day
+                            })
                           }}>
                             <ThemedView key={day.id} className="rounded-md h-16 px-2 py-0 border border-[#4d4d53]">
                               <ThemedText className="font-bold">Week {week.weekNumber} - Day {day.dayNumber}</ThemedText>
@@ -316,6 +330,22 @@ const styles = StyleSheet.create({
     // justifyContent: "center",
     backgroundSize: "cover",
     backgroundPosition: "center",
+  },
+  title: {
+    textShadowColor: '#000',
+    textShadowOffset: {
+      width: 1.5,
+      height: 1.5,
+    },
+    textShadowRadius: 4,
+  },
+  text: {
+    textShadowColor: '#000',
+    textShadowOffset: {
+      width: 0.75,
+      height: 0.75,
+    },
+    textShadowRadius: 2,
   },
   startButton: {
     width: 180,

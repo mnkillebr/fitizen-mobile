@@ -47,7 +47,7 @@ export default function WorkoutsScreen() {
               >
                 <View className="h-56 relative rounded-lg bg-slate-50 overflow-hidden my-2">
                   <ImageBackground
-                    source={{ uri: item.thumbnail ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/cld-sample-3.jpg" }}
+                    source={{ uri: item.thumbnail ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
                     style={styles.backgroundImage}
                   >
                     {/* Top Left Text */}
