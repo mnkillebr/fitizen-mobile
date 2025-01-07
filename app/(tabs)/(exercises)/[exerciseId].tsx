@@ -157,7 +157,7 @@ export default function ExerciseDetail() {
               <ThemedText type="subtitle">Exercise Cues</ThemedText>
               <ScrollView className="p-1 bg-zinc-100 dark:bg-zinc-800 rounded">
                 {exercise.cues.map((cue, cueIdx) => (
-                  <View className="flex-row gap-1">
+                  <View key={`cue-${cueIdx}`} className="flex-row gap-1">
                     <Text className="dark:text-white w-4 mt-1.5">{cueIdx+1}.</Text>
                     <View className="border border-[#4d4d53] px-2 py-0 my-1 flex-1">
                       <Text key={cueIdx} className="dark:text-white">{cue}</Text>

@@ -2,41 +2,21 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { api } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, router } from "expo-router";
 import { View, Text, SafeAreaView, ImageBackground, StyleSheet, Dimensions, Pressable, FlatList, SectionList, Image } from "react-native";
 import { FAB, IconButton } from "react-native-paper";
 import { Colors } from "@/constants/Colors";
 import { useSharedValue } from "react-native-reanimated";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import { Dialog, Tab, TabView } from "@rneui/themed";
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import VideoPlayer from "@/components/VideoPlayer";
+import { useDispatch } from "react-redux";
+import { startWorkout } from "@/redux/slices/workoutLogSlice";
 
 const { height, width } = Dimensions.get("window")
-const DATA = [
-  {
-    title: 'Main dishes',
-    data: ['Pizza', 'Burger', 'Risotto'],
-  },
-  {
-    title: 'Sides',
-    data: ['French Fries', 'Onion Rings', 'Fried Shrimps'],
-  },
-  {
-    title: 'Drinks',
-    data: ['Water', 'Coke', 'Beer'],
-  },
-  {
-    title: 'Desserts',
-    data: ['Cheese Cake', 'Ice Cream'],
-  },
-  {
-    title: 'Sides Two',
-    data: ['French Fries googles', 'Onion Rings', 'Fried Shrimps'],
-  },
-];
 
 export default function WorkoutDetail() {
   // hooks
@@ -52,6 +32,7 @@ export default function WorkoutDetail() {
     title: '',
     content: null,
   });
+  const dispatch = useDispatch()
 
   // queries
   const {
@@ -124,8 +105,6 @@ export default function WorkoutDetail() {
 			animated: true,
 		});
 	};
-  // console.log("workout", workout)
-  console.log("tab height", tabBarHeight, exerciseDetails.filter(item => !item.footer))
 
   return (
     // <>
@@ -303,7 +282,7 @@ export default function WorkoutDetail() {
                 renderSectionFooter={({section: {footer}}) => footer ? (
                   <Text className="font-bold text-[#eeeeec] text-right mb-1">{footer}</Text>
                 ) : null}
-                ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">{`No Exercises`}</Text>}
+                ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Exercises</Text>}
               />
             </TabView.Item>
           </TabView>
@@ -313,6 +292,10 @@ export default function WorkoutDetail() {
             label="Start Workout"
             style={{ ...styles.startButton, backgroundColor: Colors[colorScheme ?? 'light'].tint }}
             color="black"
+            onPress={() => {
+              dispatch(startWorkout(workoutId as string))
+              router.navigate(`/workout?workoutId=${workoutId}`)
+            }}
           />
         </View>
         <Dialog
@@ -376,8 +359,8 @@ const styles = StyleSheet.create({
     flex: 1,
     // position: "relative",
     // justifyContent: "center",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
+    // backgroundSize: "cover",
+    // backgroundPosition: "center",
   },
   title: {
     textShadowColor: '#000',

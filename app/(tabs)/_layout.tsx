@@ -25,7 +25,9 @@ export default function TabLayout() {
           },
           default: {},
         }),
-      }}>
+      }}
+      initialRouteName="(programs)"
+    >
       <Tabs.Screen
         name="(programs)"
         options={{
@@ -50,8 +52,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="gear" color={color} />,
+          // title: 'Settings',
+          // tabBarIcon: ({ color }) => <IconSymbol size={28} name="gear" color={color} />,
+          href: null
         }}
       />
     </Tabs>

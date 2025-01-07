@@ -73,6 +73,7 @@ export default function WorkoutsScreen() {
           }
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
+          ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Workouts</Text>}
         />
       </ThemedView>
     </ThemedSafeAreaView>

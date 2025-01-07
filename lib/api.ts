@@ -1,7 +1,9 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 const DEV_API_URL = __DEV__
   ? Platform.select({
+      // ios: Constants.expoConfig?.extra?.ngrokUrl || 'http://localhost:3000',
       ios: 'http://localhost:3000',
       android: 'http://10.0.2.2:3000',
       default: 'http://localhost:3000'
@@ -51,6 +53,18 @@ export const api = {
       if (!response.ok) throw new Error('Failed to fetch workout');
       return response.json();
     },
+    saveWorkout: async (workoutData) => {
+      const url = `${DEV_API_URL}/api/mobile/workouts`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(workoutData),
+      });
+      if (!response.ok) throw new Error('Failed to save workout');
+      return response.json();
+    }
   },
   exercises: {
     list: async ({ query, page, limit }: { 

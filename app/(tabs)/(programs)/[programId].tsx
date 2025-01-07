@@ -214,7 +214,7 @@ export default function ProgramDetail() {
                     {week.days.length === 4 ? (
                       <View className="flex-1 flex-col gap-3">
                         {week.days.map(day => (
-                          <Pressable onPress={() => {
+                          <Pressable key={day.id} onPress={() => {
                             setOpenDialog({
                               open: true,
                               title: `Week ${week.weekNumber} - Day ${day.dayNumber}`,
@@ -224,7 +224,7 @@ export default function ProgramDetail() {
                             <ThemedView key={day.id} className="rounded-md h-16 px-2 py-0 border border-[#4d4d53]">
                               <ThemedText className="font-bold">Week {week.weekNumber} - Day {day.dayNumber}</ThemedText>
                               {day.blocks[0].exercises.map(exercise => (
-                                <View className="flex-row justify-between mx-2">
+                                <View key={exercise.id} className="flex-row justify-between mx-2">
                                   <ThemedText type="small">{exercise.exercise.name}</ThemedText>
                                   <ThemedText type="small">{exercise.sets} sets x {exercise.time ? `${exercise.time} sec` : `${exercise.reps} reps`}</ThemedText>
                                 </View>
@@ -236,7 +236,7 @@ export default function ProgramDetail() {
                     ) : week.days.length === 3 ? (
                       <View className="flex-1 flex-col gap-2">
                         {week.days.map(day => (
-                          <Pressable onPress={() => {
+                          <Pressable key={day.id} onPress={() => {
                             setOpenDialog({
                               open: true,
                               title: `Week ${week.weekNumber} - Day ${day.dayNumber}`,
@@ -246,7 +246,7 @@ export default function ProgramDetail() {
                             <ThemedView key={day.id} className="rounded-md h-24 px-2 py-0 border border-[#4d4d53]">
                               <ThemedText className="font-bold">Week {week.weekNumber} - Day {day.dayNumber}</ThemedText>
                               {day.blocks[0].exercises.map(exercise => (
-                                <View className="flex-row justify-between mx-2">
+                                <View key={exercise.id} className="flex-row justify-between mx-2">
                                   <ThemedText type="small">{exercise.exercise.name}</ThemedText>
                                   <ThemedText type="small">{exercise.sets} sets x {exercise.time ? `${exercise.time} sec` : `${exercise.reps} reps`}</ThemedText>
                                 </View>

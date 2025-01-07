@@ -5,6 +5,8 @@ export default function WorkoutsLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="[workoutId]" options={{ headerShown: false, /*presentation: 'card'*/ }} />
+      <Stack.Screen name="workout" options={{ headerShown: false }} />
+      <Stack.Screen name="reviewWorkout" options={{ headerShown: false }} />
     </Stack>
   );
 }

@@ -1,6 +1,7 @@
 import { FlatList, ActivityIndicator, View, RefreshControl } from 'react-native';
 import { SearchBar } from './SearchBar';
 import { SkeletonItem } from './SkeletonItem';
+import { Skeleton } from '@rneui/themed';
 
 type InfiniteListProps<T> = {
   data: T[];
@@ -33,7 +34,7 @@ export function InfiniteList<T>({
     return (
       <FlatList
         data={[1, 2, 3, 4, 5]}
-        renderItem={() => <SkeletonItem />}
+        renderItem={() => <Skeleton height={224} />}
         keyExtractor={(item) => item.toString()}
       />
     );

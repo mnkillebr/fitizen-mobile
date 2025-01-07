@@ -75,6 +75,7 @@ export default function LibraryScreen() {
           keyExtractor={(item) => item.id}
           refetch={refetch}
           isRefetching={isRefetching}
+          // ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Exercises</Text>}
         />
       </ThemedView>
     </ThemedSafeAreaView>
