@@ -124,7 +124,7 @@ export default function WorkoutFlowScreen() {
 
   const currentImage = restMappedDetails[currentIndex].gif || restMappedDetails[currentIndex].img
   const nextImage = restMappedDetails[currentIndex+1] ? (restMappedDetails[currentIndex+1].gif || restMappedDetails[currentIndex+1].img) : undefined
-  // console.log("details", logs, logs.length, currentWorkout)
+  console.log("details", exerciseDetails)
   // console.log("on workout screen first", showStopwatch, restMappedDetails[currentIndex].thumbnail)
 
   return (
@@ -166,9 +166,10 @@ export default function WorkoutFlowScreen() {
               autoStart={true}
               showCustomInput={false}
               showControls={false}
+              showReset={false}
               showSound={true}
               label="Get Ready!"
-              defaultTime={1}
+              // defaultTime={1}
               onStateChange={handleCountdownStateChange}
               onCountdownEnd={() => setShowStopwatch(true)}
             />
@@ -182,18 +183,19 @@ export default function WorkoutFlowScreen() {
               autoStart={true}
               showCustomInput={false}
               showControls={false}
+              showReset={false}
               showSound={true}
               onCountdownEnd={() => {
                 setCurrentIndex(currentIndex+1)
                 if (restMappedDetails[currentIndex+1].time) {
                   const newTime = restMappedDetails[currentIndex+1].time.includes("min") ? parseInt(restMappedDetails[currentIndex+1].time) * 60 : parseInt(restMappedDetails[currentIndex+1].time)
-                  // handleResetCountdown(newTime)
-                  handleResetCountdown(5)
+                  handleResetCountdown(newTime)
+                  // handleResetCountdown(5)
                   countdownRef.current?.resume();
                 }
               }}
-              defaultTime={1}
-              // defaultTime={restMappedDetails[currentIndex].rest.includes("min") ? parseInt(restMappedDetails[currentIndex].rest) * 60 : parseInt(restMappedDetails[currentIndex].rest)}
+              // defaultTime={1}
+              defaultTime={restMappedDetails[currentIndex].rest.includes("min") ? parseInt(restMappedDetails[currentIndex].rest) * 60 : parseInt(restMappedDetails[currentIndex].rest)}
             />
             <Text className='text-3xl font-semibold text-center text-[#eeeeec]' style={styles.textShadow}>Rest Period</Text>
           </View>
@@ -208,8 +210,8 @@ export default function WorkoutFlowScreen() {
                 showControls={false}
                 showSound={true}
                 onStateChange={setCountdownRunning}
-                defaultTime={1}
-                // defaultTime={restMappedDetails[currentIndex].time.includes("min") ? parseInt(restMappedDetails[currentIndex].time) * 60 : parseInt(restMappedDetails[currentIndex].time)}
+                // defaultTime={1}
+                defaultTime={restMappedDetails[currentIndex].time.includes("min") ? parseInt(restMappedDetails[currentIndex].time) * 60 : parseInt(restMappedDetails[currentIndex].time)}
               />
             ) : null}
             <Text className='text-lg font-semibold ml-8 text-[#eeeeec]' style={styles.textShadow}>Current Exercise:</Text>
@@ -310,7 +312,7 @@ export default function WorkoutFlowScreen() {
           onPress={handleTogglePause}
         />
         <FAB
-          icon={nextImage ? "chevron-right" : "check"}
+          icon={nextImage ? "chevron-right" : "flag-checkered"}
           size="medium"
           label={nextImage ? "Next" : "Finish"}
           style={{ ...styles.nextButton, backgroundColor: Colors[colorScheme ?? 'light'].tint }}

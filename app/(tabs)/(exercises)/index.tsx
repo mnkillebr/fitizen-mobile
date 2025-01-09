@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, Text, View, ImageBackground, Pressable } from 'react-native';
+import { Image, StyleSheet, Platform, Text, View, ImageBackground, Pressable, ScrollView } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { useInfiniteExercises } from '@/hooks/useInfiniteQuery';
 import { InfiniteList } from '@/components/InfiniteList';
 import { Link } from 'expo-router';
+import { Skeleton } from '@rneui/themed';
 
 export default function LibraryScreen() {
   const [query, setQuery] = useState('');
@@ -34,7 +35,11 @@ export default function LibraryScreen() {
   return (
     <ThemedSafeAreaView className='flex-1'>
       <ThemedView className='p-4'>
-        <InfiniteList
+        {isLoading ? (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {[...Array(3)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={224} className='my-2 rounded-lg' />)}
+          </ScrollView>
+        ) : <InfiniteList
           data={flatData}
           renderItem={({ item }) => (
             <Link
@@ -76,7 +81,7 @@ export default function LibraryScreen() {
           refetch={refetch}
           isRefetching={isRefetching}
           // ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Exercises</Text>}
-        />
+        />}
       </ThemedView>
     </ThemedSafeAreaView>
   );

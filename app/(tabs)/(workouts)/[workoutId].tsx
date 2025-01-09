@@ -133,7 +133,8 @@ export default function WorkoutDetail() {
       <SafeAreaView className="flex-1">
         <IconButton
           icon="arrow-left"
-          iconColor={Colors[colorScheme ?? 'light'].tint}
+          iconColor="black"
+          style={{ backgroundColor: Colors[colorScheme ?? 'light'].tint }}
           onPress={() => router.back()}
         />
         <View className="pb-4 h-52">
@@ -237,10 +238,10 @@ export default function WorkoutDetail() {
                     <ThemedView className="my-0.5 p-1 flex-row gap-2 rounded w-full overflow-hidden">
                       <Image
                         source={{ uri: item.thumbnail ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
-                        style={{ height: 50, aspectRatio: 4/3, borderRadius: 4, alignSelf: 'center' }}
+                        style={{ height: 50, aspectRatio: 4/3, borderRadius: 4, alignSelf: 'start' }}
                       />
-                      <View className="flex-col w-full">
-                        <Text className="dark:text-[#eeeeec]">{item.name}</Text>
+                      <View className="flex-1 flex-col w-full">
+                        <Text className="dark:text-[#eeeeec] mb-1">{item.name}</Text>
                         <View className="flex-row flex-wrap max-w-full gap-x-4 gap-y-0">
                           <View className="flex flex-col justify-between">
                             <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Sets</Text>
@@ -265,8 +266,12 @@ export default function WorkoutDetail() {
                             <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Rest</Text>
                             <Text className="w-fit text-sm h-5 dark:text-[#eeeeec]">{item.rest}</Text>
                           </View>
+                          <View className="flex flex-col justify-between">
+                            <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">RPE</Text>
+                            <Text className="w-fit text-sm h-5 dark:text-[#eeeeec]">{item.rpe}</Text>
+                          </View>
                           {item.notes ? (
-                            <View className="flex flex-col justify-between">
+                            <View className="flex flex-col justify-between overflow-hidden">
                               <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Notes</Text>
                               <Text className="w-fit text-sm h-5 dark:text-[#eeeeec] truncate">{item.notes}</Text>
                             </View>
@@ -379,7 +384,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   startButton: {
-    width: 180,
+    width: 170,
     height: 50,
     // marginVertical: 8,
     position: "absolute",

@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, Text, View, ImageBackground, Pressable, FlatList, RefreshControl } from 'react-native';
+import { Image, StyleSheet, Platform, Text, View, ImageBackground, Pressable, FlatList, RefreshControl, ScrollView } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Link } from 'expo-router';
+import { Skeleton } from '@rneui/themed';
 
 export default function WorkoutsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,7 +21,7 @@ export default function WorkoutsScreen() {
     refetch,
     isRefetching
   } = useQuery({
-    queryKey: ['programs', searchQuery],
+    queryKey: ['workouts', searchQuery],
     queryFn: () => api.workouts.list(searchQuery)
   });
   return (
@@ -30,7 +31,11 @@ export default function WorkoutsScreen() {
           placeholder='Search Workouts ...'
           onSearch={setSearchQuery}
         />
-        <FlatList
+        {isLoading ? (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {[...Array(3)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={224} className='my-2 rounded-lg' />)}
+          </ScrollView>
+        ) : <FlatList
           data={workouts ?? []}
           renderItem={({ item }) => (
             <Link
@@ -74,7 +79,7 @@ export default function WorkoutsScreen() {
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Workouts</Text>}
-        />
+        />}
       </ThemedView>
     </ThemedSafeAreaView>
   );

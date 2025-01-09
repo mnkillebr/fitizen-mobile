@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, Text, View, FlatList, RefreshControl, Pressable } from 'react-native';
+import { Image, StyleSheet, Platform, Text, View, FlatList, RefreshControl, Pressable, ScrollView } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -11,6 +11,7 @@ import { api } from '@/lib/api';
 import { SearchBar } from '@/components/SearchBar';
 import { useState } from 'react';
 import { router, Link } from 'expo-router';
+import { Skeleton } from '@rneui/themed';
 
 const placeholderPrograms = [
   {
@@ -65,37 +66,43 @@ export default function ProgramsScreen() {
           placeholder='Search Programs ...'
           onSearch={setSearchQuery}
         />
-        <FlatList
-          data={programs ? [...programs, ...placeholderPrograms] : placeholderPrograms}
-          renderItem={({item}) => (
-            <Link
-              href={{
-                pathname: '/(tabs)/(programs)/[programId]',
-                params: { programId: item.id }
-              }}
-              disabled={!!item.opacity}
-              asChild
-            >
-              <Pressable
-                style={({ pressed }) => [
-                  { opacity: pressed ? 0.7 : 1 },
-                ]}
+        {isLoading ? (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {[...Array(3)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={224} className='my-2 rounded-lg' />)}
+          </ScrollView>
+        ) : (
+          <FlatList
+            data={programs ? [...programs, ...placeholderPrograms] : placeholderPrograms}
+            renderItem={({item}) => (
+              <Link
+                href={{
+                  pathname: '/(tabs)/(programs)/[programId]',
+                  params: { programId: item.id }
+                }}
+                disabled={!!item.opacity}
+                asChild
               >
-                <ProgramCard {...item} />
-              </Pressable>
-            </Link>
-          )}
-          keyExtractor={item => item.id}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={refetch}
-            />
-          }
-          keyboardDismissMode="on-drag"
-          keyboardShouldPersistTaps="handled"
-        />
+                <Pressable
+                  style={({ pressed }) => [
+                    { opacity: pressed ? 0.7 : 1 },
+                  ]}
+                >
+                  <ProgramCard {...item} />
+                </Pressable>
+              </Link>
+            )}
+            keyExtractor={item => item.id}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefetching}
+                onRefresh={refetch}
+              />
+            }
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
+          />
+        )}
       </ThemedView>
     </ThemedSafeAreaView>
   );

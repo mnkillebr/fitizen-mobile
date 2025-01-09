@@ -289,7 +289,7 @@ export default function ProgramDetail() {
             {openDialog.content ? openDialog.content.blocks.map((block) => (
               <View key={`block-${block.id}`} className="">
                 {block.exercises.map((exercise, exercise_idx) => (
-                  <View key={`exercise-${exercise_idx}`} className="flex-row justify-between">
+                  <View key={`block-${block.id}-exercise-${exercise_idx}`} className="flex-row justify-between">
                     <ThemedText type="small" className="w-2/3">{exercise.exercise.name}</ThemedText>
                     <ThemedText type="small">{exercise.sets} x {exercise.time ? `${exercise.time} sec` : exercise.reps}</ThemedText>
                   </View>

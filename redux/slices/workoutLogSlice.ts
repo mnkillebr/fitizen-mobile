@@ -48,6 +48,7 @@ export const workoutLogSlice = createSlice({
         exerciseId: string;
         exerciseName: string;
         orderInRoutine: number;
+        exerciseThumbnail: string;
         set: ExerciseLogSet;
         target: "time" | "reps";
         targetReps?: string;

@@ -108,10 +108,17 @@ export default function WorkoutDetail() {
     exerciseId: string;
     exerciseName: string;
     target: "reps" | "time";
-    targetreps?: string;
+    targetReps?: string;
     time?: string;
     load: number;
     orderInRoutine: number;
+    set: number;
+    unit: string;
+  }
+  type ItemDataType = {
+    actualReps: string;
+    exerciseId: string;
+    load: number | undefined;
     set: number;
     unit: string;
   }
@@ -169,7 +176,7 @@ export default function WorkoutDetail() {
           <FlatList
             data={logData}
             keyExtractor={item => item.circuitId || item.exerciseId}
-            renderItem={({item, index}) => {
+            renderItem={({item, index}: { item: { circuitId: string; thumbnail: string; title: string; data: Array<ItemDataType>; target: "reps" | "time"; targetReps?: string; time: string; }, index: number}) => {
               if (item.circuitId) {
                 return (
                   <View className="flex-col my-1" style={{ paddingBottom: logData.length === (index+1) ? tabBarHeight : 0 }}>
@@ -177,11 +184,14 @@ export default function WorkoutDetail() {
                     <View className="border-2 border-dashed border-gray-200 p-2 rounded gap-y-2">
                       {circuitMappedExercises(item).map((circuitRound: {set: number; exercises: Array<CircuitItemDataType>}, circuitIdx: number) => {
                         return (
-                          <ThemedView className="p-1 flex-col rounded w-full">
-                            <Text className="dark:text-[#eeeeec] font-bold">Round {circuitRound.set}</Text>
+                          <ThemedView key={`${item.circuitId}-round-${circuitRound.set}`} className="p-1 flex-col rounded w-full">
+                            <Text className="dark:text-[#eeeeec] font-bold mb-1">Round {circuitRound.set}</Text>
                             <View className="flex-col gap-1">
-                              {circuitRound.exercises.map((exercise: CircuitItemDataType) => (
-                                <View className="flex-row w-full gap-x-2 h-16">
+                              {circuitRound.exercises.map((exercise: CircuitItemDataType, exIdx: number) => (
+                                <View
+                                  key={`${item.circuitId}-round-${circuitRound.set}-exercise-${exercise.exerciseId}-${exIdx}`}
+                                  className={`flex-row w-full gap-x-2 h-16 ${(exIdx + 1) < circuitRound.exercises.length ? "border-b-hairline border-white" : ""}`}
+                                >
                                   <View className="w-[calc(40%)] overflow-hidden">
                                     <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Name</Text>
                                     <Text className="text-sm dark:text-[#eeeeec]" style={{ flexWrap: "nowrap"}}>{exercise.exerciseName}</Text>
@@ -219,14 +229,18 @@ export default function WorkoutDetail() {
                       source={{ uri: item.thumbnail ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
                       style={{ height: 50, aspectRatio: 4/3, borderRadius: 4, }}
                     />
-                    {item.data.map((dataItem, dataIdx) => {
+                    {item.data.map((dataItem: ItemDataType, dataIdx: number) => {
                       return (
-                        <ThemedView key={dataIdx} className="my-0.5 mx-1 p-1 flex-row gap-2 rounded">
+                        <ThemedView key={`item-${dataItem.exerciseId}`} className="my-0.5 mx-1 p-1 flex-row gap-2 rounded">
                           <View className="flex-row w-full gap-4">
                             <Text className="dark:text-[#eeeeec] font-bold">Set {dataIdx+1}</Text>
                             <View className="flex-row flex-wrap max-w-full gap-x-4 gap-y-0">
+                              <View className="w-14">
+                                <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Target</Text>
+                                <Text className="text-sm dark:text-[#eeeeec]">{item.target === "reps" ? `${item.targetReps} reps`: item.time}</Text>
+                              </View>
                               <View className="">
-                                <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Reps Completed</Text>
+                                <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Reps</Text>
                                 <Text className="w-10 text-sm dark:text-[#eeeeec]">{dataItem.actualReps}</Text>
                               </View>
                               <View className="">
@@ -302,7 +316,7 @@ export default function WorkoutDetail() {
           /> */}
         </View>
         <FAB
-          // icon="download"
+          icon="check"
           size="medium"
           label="Save Workout"
           style={{
@@ -333,7 +347,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   saveButton: {
-    width: 150,
+    width: 170,
     height: 50,
     position: "absolute",
     right: 8,

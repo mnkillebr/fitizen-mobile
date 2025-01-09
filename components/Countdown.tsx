@@ -14,6 +14,7 @@ interface CountdownTimerProps {
   showPresetTimes?: boolean;
   showCustomInput?: boolean;
   showControls?: boolean;
+  showReset?: boolean;
   showSound?: boolean;
   onCountdownEnd?: () => void;
   onStateChange?: (isRunning: boolean) => void;
@@ -34,6 +35,7 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
     showPresetTimes = true,
     showCustomInput = true,
     showControls = true,
+    showReset = true,
     showSound = false,
     onCountdownEnd = () => {},
     onStateChange,
@@ -158,8 +160,8 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
   };
 
   const handleReset = () => {
-    setIsRunning(false);
-    setTime(0);
+    setIsRunning(true);
+    setTime(defaultTime);
     setCustomMinutes('');
     setCustomSeconds('');
   };
@@ -267,14 +269,20 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
             >
               <MaterialIcons name="stop" size={24} color="white" />
             </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleReset}
-              style={[styles.button, styles.resetButton]}
-            >
-              <MaterialIcons name="refresh" size={24} color="white" />
-            </TouchableOpacity>
           </>
+        ) : null}
+
+        {showReset ? (
+          <TouchableOpacity
+            onPress={handleReset}
+            style={[styles.button, {backgroundColor: Colors[colorScheme ?? 'light'].tint}]}
+          >
+            <MaterialIcons
+              name="refresh"
+              size={24}
+              color="black"
+            />
+          </TouchableOpacity>
         ) : null}
 
         {showSound ? (
