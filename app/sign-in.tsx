@@ -3,22 +3,49 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useAuth } from '@/providers/auth-provider';
+import { Redirect } from 'expo-router';
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet } from 'react-native';
 import { Button, Divider } from 'react-native-paper';
 
 export default function SignInScreen() {
-  const { signIn, signInSocial } = useAuth();
+  const colorScheme = useColorScheme()
+  const { loading, session, signIn, signInSocial } = useAuth();
   const [email, setEmail] = useState('');
+  const [isValidEmail, setIsValidEmail] = useState(false);
   const [message, setMessage] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
+  // if (loading) {
+  //   return (
+  //     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+  //       <Text>Loading...</Text>
+  //     </View>
+  //   );
+  // }
+
+  if (session) {
+    return <Redirect href="/(tabs)" />;
+  }
+
+  const handleEmailChange = (emailText: string) => {
+    setMessage('')
+    setEmail(emailText);
+
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    setIsValidEmail(emailRegex.test(emailText));
+  };
+
   const handleSignIn = async () => {
-    try {
-      await signIn(email);
-      setMessage('Check your email for the login link!');
-    } catch (error) {
-      setMessage('Failed to send login link.');
+    if (isValidEmail) {
+      try {
+        await signIn(email);
+        // setMessage('Check your email for the login link!');
+      } catch (error) {
+        // setMessage('Failed to send login link.');
+      }
+    } else if (email.length) {
+      setMessage('Email format is not valid')
     }
   };
   const handleSignInSocial = async (provider: string) => {
@@ -28,18 +55,18 @@ export default function SignInScreen() {
       setMessage(`Failed to sign in with ${provider}.`);
     }
   }
-  const colorScheme = useColorScheme()
 
+  // console.log("valid email", isValidEmail)
   return (
     <ThemedView style={styles.container}>
       <View className='border rounded-md p-4' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
         <ThemedText className='text-center mb-4' type="subtitle" >Sign In</ThemedText>
         <TextInput
-          style={[styles.input, isFocused && styles.inputFocused]}
+          style={[styles.input, isFocused && styles.inputFocused, { color: Colors[colorScheme ?? "light"].text }]}
           placeholder="Enter your email"
           placeholderTextColor="#78716c"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={handleEmailChange}
           selectionColor="#fff"
           keyboardType="email-address"
           autoCapitalize="none"
@@ -87,7 +114,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 8,
     paddingHorizontal: 8,
-    color: "#fffd"
+    // color: "#fff"
   },
   inputFocused: {
     borderColor: '#a16207',
@@ -95,5 +122,6 @@ const styles = StyleSheet.create({
   message: {
     marginTop: 12,
     textAlign: 'center',
+    color: 'red'
   },
 });

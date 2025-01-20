@@ -35,7 +35,9 @@
         }
       ],
       "expo-video",
-      "expo-audio"
+      "expo-audio",
+      "expo-av",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

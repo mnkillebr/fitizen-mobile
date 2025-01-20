@@ -11,6 +11,8 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Link } from 'expo-router';
 import { Skeleton } from '@rneui/themed';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 export default function WorkoutsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,8 +26,11 @@ export default function WorkoutsScreen() {
     queryKey: ['workouts', searchQuery],
     queryFn: () => api.workouts.list(searchQuery)
   });
+
+  const workoutState = useSelector((state: RootState) => state.workoutLog)
+  // console.log("workoutState", workouts)
   return (
-    <ThemedSafeAreaView className='flex-1'>
+    <ThemedSafeAreaView className='flex-1 -mt-4'>
       <ThemedView className='p-4 h-full'>
         <SearchBar
           placeholder='Search Workouts ...'

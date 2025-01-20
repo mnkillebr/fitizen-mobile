@@ -17,6 +17,22 @@ import { Image, ImageBackground, Keyboard, StyleSheet, Text, TouchableWithoutFee
 import { FAB, IconButton, TextInput, } from 'react-native-paper';
 import { useDispatch, useSelector } from "react-redux";
 
+const DialogButton = ({ 
+  title = 'Button',
+  onPress = () => {},
+  buttonStyle = {},
+  titleStyle = {},
+  ...otherProps 
+}) => (
+  <Dialog.Button
+    title={title}
+    onPress={onPress}
+    buttonStyle={[styles.buttonBase, buttonStyle]}
+    titleStyle={[styles.buttonText, titleStyle]}
+    {...otherProps}
+  />
+)
+
 export default function WorkoutFlowScreen() {
   const { workoutId } = useLocalSearchParams();
   const [workoutPaused, setWorkoutPaused] = useState(false)
@@ -124,7 +140,7 @@ export default function WorkoutFlowScreen() {
 
   const currentImage = restMappedDetails[currentIndex].gif || restMappedDetails[currentIndex].img
   const nextImage = restMappedDetails[currentIndex+1] ? (restMappedDetails[currentIndex+1].gif || restMappedDetails[currentIndex+1].img) : undefined
-  console.log("details", exerciseDetails)
+  // console.log("details", exerciseDetails)
   // console.log("on workout screen first", showStopwatch, restMappedDetails[currentIndex].thumbnail)
 
   return (
@@ -366,14 +382,14 @@ export default function WorkoutFlowScreen() {
         <ThemedText>Are you sure you want to cancel the workout?</ThemedText>
         <Dialog.Actions>
           <View className='flex-row'>
-            <Dialog.Button
+            <DialogButton
               type="clear"
               titleStyle={{ color: Colors[colorScheme ?? 'light'].text }}
               onPress={() => setOpenDialog(false)}
             >
               No
-            </Dialog.Button>
-            <Dialog.Button
+            </DialogButton>
+            <DialogButton
               titleStyle={{ color: "black" }}
               buttonStyle={{ backgroundColor: Colors[colorScheme ?? 'light'].tint, borderRadius: 4 }}
               onPress={() => {
@@ -383,7 +399,7 @@ export default function WorkoutFlowScreen() {
               }}
             >
               Yes
-            </Dialog.Button>
+            </DialogButton>
           </View>
         </Dialog.Actions>
       </Dialog>
@@ -431,5 +447,14 @@ const styles = StyleSheet.create({
     // bottom: -12,
     // right: 12,
     justifyContent: "center",
+  },
+  buttonBase: {
+    // minWidth: 100,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  buttonText: {
+    fontSize: 16,
   },
 })

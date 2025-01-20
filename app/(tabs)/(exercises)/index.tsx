@@ -33,7 +33,7 @@ export default function LibraryScreen() {
   const flatData = data?.pages.flatMap(page => page.exercises) ?? [];
 
   return (
-    <ThemedSafeAreaView className='flex-1'>
+    <ThemedSafeAreaView className='flex-1 -mt-4'>
       <ThemedView className='p-4'>
         {isLoading ? (
           <ScrollView showsVerticalScrollIndicator={false}>

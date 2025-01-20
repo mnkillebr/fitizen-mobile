@@ -12,6 +12,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { QueryProvider } from '@/providers/query-provider';
 import { store } from '@/redux/store';
 import { AuthProvider } from '@/providers/auth-provider';
+import DeepLinkHandler from '@/providers/deep-links';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -35,12 +36,13 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AuthProvider>
-          <QueryProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <DeepLinkHandler />
             <Slot />
             <StatusBar style="auto" />
-          </QueryProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </QueryProvider>
       </ThemeProvider>
     </Provider>
   );

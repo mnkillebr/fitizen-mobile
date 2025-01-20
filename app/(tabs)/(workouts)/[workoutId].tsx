@@ -1,24 +1,28 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { api } from "@/lib/api";
+import { api, apiClient } from "@/lib/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, router } from "expo-router";
-import { View, Text, SafeAreaView, ImageBackground, StyleSheet, Dimensions, Pressable, FlatList, SectionList, Image } from "react-native";
+import { View, Text, SafeAreaView, ImageBackground, StyleSheet, Dimensions, Pressable, FlatList, SectionList, Image, ActivityIndicator } from "react-native";
 import { FAB, IconButton } from "react-native-paper";
 import { Colors } from "@/constants/Colors";
 import { useSharedValue } from "react-native-reanimated";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
-import { Dialog, Tab, TabView } from "@rneui/themed";
+import { Dialog, Skeleton, Tab, TabView } from "@rneui/themed";
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import VideoPlayer from "@/components/VideoPlayer";
 import { useDispatch } from "react-redux";
 import { startWorkout } from "@/redux/slices/workoutLogSlice";
+import { useAuth } from "@/providers/auth-provider";
+import { ScrollView } from "react-native-gesture-handler";
 
 const { height, width } = Dimensions.get("window")
 
 export default function WorkoutDetail() {
+  const { session } = useAuth()
+  // console.log("session", session)
   // hooks
   const { workoutId } = useLocalSearchParams();
   const colorScheme = useColorScheme();
@@ -43,12 +47,13 @@ export default function WorkoutDetail() {
     isRefetching
   } = useQuery({
     queryKey: ['workout', workoutId.toString()],
-    queryFn: () => api.workouts.workoutDetail(workoutId.toString())
+    queryFn: () => apiClient.workouts.workoutDetail(workoutId.toString())
   });
-  const { workout, exerciseDetails } = useMemo(() => {
+  const { workout, exerciseDetails, logs } = useMemo(() => {
     if (data) {
       return {
         workout: data.workout,
+        logs: data.logs,
         exerciseDetails: data.exerciseDetails.reduce((result, curr) => {
           let resultArr = result
           if (curr.circuitId) {
@@ -137,7 +142,12 @@ export default function WorkoutDetail() {
           style={{ backgroundColor: Colors[colorScheme ?? 'light'].tint }}
           onPress={() => router.back()}
         />
-        <View className="pb-4 h-52">
+        {isLoading ? (
+          <View className="pb-4 h-52 justify-center">
+            <ActivityIndicator />
+          </View>
+        ) : (
+          <View className="pb-4 h-52">
           <View
             id="carousel-component"
             // className="flex flex-col"
@@ -199,109 +209,129 @@ export default function WorkoutDetail() {
               ))}
             </View>
           </View>
-        </View>
+          </View>
+        )}
         <View className="flex-1 mt-8" style={{ paddingBottom: (tabBarHeight-8) }}>
-          <Tab
-            value={tabIndex}
-            onChange={(e) => setTabIndex(e)}
-            indicatorStyle={{
-              backgroundColor: Colors[colorScheme ?? 'light'].tint,
-              height: 3,
-            }}
-            variant="default"
-          >
-            {['Exercises', 'History'].map((tabLabel, tabLabelIdx) => (
-              <Tab.Item
-                key={`tab-${tabLabelIdx}`}
-                title={tabLabel}
-                titleStyle={(active) => ({
-                  fontSize: 12,
-                  fontWeight: "bold",
-                  color: active ? Colors[colorScheme ?? 'light'].tint : "white"
-                })}
+          {isLoading ? (
+            <ScrollView showsVerticalScrollIndicator={false} className="p-4">
+              {[...Array(4)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={80} className='my-2 rounded-lg' />)}
+            </ScrollView>
+          ) : (
+            <>
+              <Tab
+                value={tabIndex}
+                onChange={(e) => setTabIndex(e)}
+                indicatorStyle={{
+                  backgroundColor: Colors[colorScheme ?? 'light'].tint,
+                  height: 3,
+                }}
+                variant="default"
+              >
+                {['Exercises', 'History'].map((tabLabel, tabLabelIdx) => (
+                  <Tab.Item
+                    key={`tab-${tabLabelIdx}`}
+                    title={tabLabel}
+                    titleStyle={(active) => ({
+                      fontSize: 12,
+                      fontWeight: "bold",
+                      color: active ? Colors[colorScheme ?? 'light'].tint : "white"
+                    })}
+                  />
+                ))}
+              </Tab>
+              <TabView value={tabIndex} onChange={setTabIndex} animationType="spring">
+                <TabView.Item className="px-2 pt-2 w-full">
+                  <SectionList
+                    sections={exerciseDetails}
+                    keyExtractor={(item, index) => item + index}
+                    renderItem={({item}) => (
+                      <Pressable onPress={() => {
+                        setOpenDialog({
+                          open: true,
+                          title: item.name,
+                          content: item,
+                        })
+                      }}>
+                        <ThemedView className="my-0.5 p-1 flex-row gap-2 rounded w-full overflow-hidden">
+                          <Image
+                            source={{ uri: item.thumbnail ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
+                            style={{ height: 50, aspectRatio: 4/3, borderRadius: 4, alignSelf: 'start' }}
+                          />
+                          <View className="flex-1 flex-col w-full">
+                            <Text className="dark:text-[#eeeeec] mb-1">{item.name}</Text>
+                            <View className="flex-row flex-wrap max-w-full gap-x-4 gap-y-0">
+                              <View className="flex flex-col justify-between">
+                                <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Sets</Text>
+                                <Text className="w-10 text-sm h-5 dark:text-[#eeeeec]">{item.sets}</Text>
+                              </View>
+                              <View className="flex flex-col justify-between">
+                                <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Target</Text>
+                                <Text className="w-10 text-sm h-5 dark:text-[#eeeeec]">{item.target}</Text>
+                              </View>
+                              {item.target === "reps" ? (
+                                <View className="flex flex-col justify-between">
+                                  <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Reps</Text>
+                                  <Text className="w-10 text-sm h-5 dark:text-[#eeeeec]">{item.reps}</Text>
+                                </View>
+                              ) : (
+                                <View className="flex flex-col justify-between">
+                                  <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Time</Text>
+                                  <Text className="w-fit text-sm h-5 dark:text-[#eeeeec]">{item.time}</Text>
+                                </View>
+                              )}
+                              <View className="flex flex-col justify-between">
+                                <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Rest</Text>
+                                <Text className="w-fit text-sm h-5 dark:text-[#eeeeec]">{item.rest}</Text>
+                              </View>
+                              <View className="flex flex-col justify-between">
+                                <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">RPE</Text>
+                                <Text className="w-fit text-sm h-5 dark:text-[#eeeeec]">{item.rpe}</Text>
+                              </View>
+                              {item.notes ? (
+                                <View className="flex flex-col justify-between overflow-hidden">
+                                  <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Notes</Text>
+                                  <Text className="w-fit text-sm h-5 dark:text-[#eeeeec] truncate">{item.notes}</Text>
+                                </View>
+                              ) : null}
+                            </View>
+                          </View>
+                        </ThemedView>
+                      </Pressable>
+                    )}
+                    renderSectionHeader={({section: {title}}) => title ? (
+                      <Text className="font-bold text-[#eeeeec] mt-2">{title}</Text>
+                    ) : null}
+                    renderSectionFooter={({section: {footer}}) => footer ? (
+                      <Text className="font-bold text-[#eeeeec] text-right mb-1">{footer}</Text>
+                    ) : null}
+                    ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Exercises</Text>}
+                  />
+                </TabView.Item>
+                <TabView.Item className="px-2 pt-2 w-full">
+                  <FlatList
+                    data={logs ?? []}
+                    renderItem={({ item }) => <Text>Log</Text>}
+                    keyExtractor={item => item.id}
+                    showsVerticalScrollIndicator={false}
+                    keyboardDismissMode="on-drag"
+                    keyboardShouldPersistTaps="handled"
+                    ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No workout logs</Text>}
+                  />
+                </TabView.Item>
+              </TabView>
+              <FAB
+                icon="play"
+                size="medium"
+                label="Start Workout"
+                style={{ ...styles.startButton, backgroundColor: Colors[colorScheme ?? 'light'].tint }}
+                color="black"
+                onPress={() => {
+                  dispatch(startWorkout(workoutId as string))
+                  router.navigate(`/workout?workoutId=${workoutId}`)
+                }}
               />
-            ))}
-          </Tab>
-          <TabView value={tabIndex} onChange={setTabIndex} animationType="spring">
-            <TabView.Item className="px-2 pt-2 w-full">
-              <SectionList
-                sections={exerciseDetails}
-                keyExtractor={(item, index) => item + index}
-                renderItem={({item}) => (
-                  <Pressable onPress={() => {
-                    setOpenDialog({
-                      open: true,
-                      title: item.name,
-                      content: item,
-                    })
-                  }}>
-                    <ThemedView className="my-0.5 p-1 flex-row gap-2 rounded w-full overflow-hidden">
-                      <Image
-                        source={{ uri: item.thumbnail ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
-                        style={{ height: 50, aspectRatio: 4/3, borderRadius: 4, alignSelf: 'start' }}
-                      />
-                      <View className="flex-1 flex-col w-full">
-                        <Text className="dark:text-[#eeeeec] mb-1">{item.name}</Text>
-                        <View className="flex-row flex-wrap max-w-full gap-x-4 gap-y-0">
-                          <View className="flex flex-col justify-between">
-                            <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Sets</Text>
-                            <Text className="w-10 text-sm h-5 dark:text-[#eeeeec]">{item.sets}</Text>
-                          </View>
-                          <View className="flex flex-col justify-between">
-                            <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Target</Text>
-                            <Text className="w-10 text-sm h-5 dark:text-[#eeeeec]">{item.target}</Text>
-                          </View>
-                          {item.target === "reps" ? (
-                            <View className="flex flex-col justify-between">
-                              <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Reps</Text>
-                              <Text className="w-10 text-sm h-5 dark:text-[#eeeeec]">{item.reps}</Text>
-                            </View>
-                          ) : (
-                            <View className="flex flex-col justify-between">
-                              <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Time</Text>
-                              <Text className="w-fit text-sm h-5 dark:text-[#eeeeec]">{item.time}</Text>
-                            </View>
-                          )}
-                          <View className="flex flex-col justify-between">
-                            <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Rest</Text>
-                            <Text className="w-fit text-sm h-5 dark:text-[#eeeeec]">{item.rest}</Text>
-                          </View>
-                          <View className="flex flex-col justify-between">
-                            <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">RPE</Text>
-                            <Text className="w-fit text-sm h-5 dark:text-[#eeeeec]">{item.rpe}</Text>
-                          </View>
-                          {item.notes ? (
-                            <View className="flex flex-col justify-between overflow-hidden">
-                              <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Notes</Text>
-                              <Text className="w-fit text-sm h-5 dark:text-[#eeeeec] truncate">{item.notes}</Text>
-                            </View>
-                          ) : null}
-                        </View>
-                      </View>
-                    </ThemedView>
-                  </Pressable>
-                )}
-                renderSectionHeader={({section: {title}}) => title ? (
-                  <Text className="font-bold text-[#eeeeec] mt-2">{title}</Text>
-                ) : null}
-                renderSectionFooter={({section: {footer}}) => footer ? (
-                  <Text className="font-bold text-[#eeeeec] text-right mb-1">{footer}</Text>
-                ) : null}
-                ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Exercises</Text>}
-              />
-            </TabView.Item>
-          </TabView>
-          <FAB
-            icon="play"
-            size="medium"
-            label="Start Workout"
-            style={{ ...styles.startButton, backgroundColor: Colors[colorScheme ?? 'light'].tint }}
-            color="black"
-            onPress={() => {
-              dispatch(startWorkout(workoutId as string))
-              router.navigate(`/workout?workoutId=${workoutId}`)
-            }}
-          />
+            </>
+          )}
         </View>
         <Dialog
           isVisible={openDialog.open}
@@ -351,7 +381,6 @@ export default function WorkoutDetail() {
               </View>
             ) : null}
             <View className="h-96" />
-            
           </View>
         </Dialog>
       </SafeAreaView>

@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, Text, View, FlatList, RefreshControl, Pressable, ScrollView } from 'react-native';
+import { Image, StyleSheet, Platform, Text, View, FlatList, RefreshControl, Pressable, ScrollView, Alert } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -7,11 +7,12 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedSafeAreaView } from '@/components/ThemeSafeAreaView';
 import ProgramCard from '@/components/ProgramCard';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api, apiClient } from '@/lib/api';
 import { SearchBar } from '@/components/SearchBar';
 import { useState } from 'react';
 import { router, Link } from 'expo-router';
 import { Skeleton } from '@rneui/themed';
+import { useAuth } from '@/providers/auth-provider';
 
 const placeholderPrograms = [
   {
@@ -46,6 +47,8 @@ const Item = ({title}: ItemProps) => (
 );
 
 export default function ProgramsScreen() {
+  const { signOut } = useAuth()
+  // console.log("auth", auth?.session.user)
   const [searchQuery, setSearchQuery] = useState('');
   const {
     data: programs,
@@ -55,8 +58,17 @@ export default function ProgramsScreen() {
     isRefetching
   } = useQuery({
     queryKey: ['programs', searchQuery],
-    queryFn: () => api.programs.list(searchQuery)
+    queryFn: () => apiClient.programs.list(searchQuery),
   });
+
+  if (!isLoading && error?.message === "Unauthorized") {
+    Alert.alert('Unauthorized Request', 'You will be signed out', [
+      {
+        text: 'OK',
+        onPress: signOut 
+      },
+    ]);
+  }
 
   return (
     <ThemedSafeAreaView className='flex-1'>
@@ -72,7 +84,7 @@ export default function ProgramsScreen() {
           </ScrollView>
         ) : (
           <FlatList
-            data={programs ? [...programs, ...placeholderPrograms] : placeholderPrograms}
+            data={programs ? [...programs, ...placeholderPrograms.filter((p => p.name.toLowerCase().includes(searchQuery)))] : placeholderPrograms.filter((p => p.name.toLowerCase().includes(searchQuery)))}
             renderItem={({item}) => (
               <Link
                 href={{

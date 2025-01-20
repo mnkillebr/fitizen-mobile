@@ -33,7 +33,8 @@ export function SearchBar({ placeholder = 'Search...', onSearch }: SearchBarProp
   return (
     <Searchbar
       placeholder={placeholder}
-      onChangeText={handleChangeText}
+      onChangeText={setSearchQuery}
+      onBlur={() => onSearch(searchQuery)}
       value={searchQuery}
       onClearIconPress={handleClear}
       autoFocus={false}
@@ -50,7 +51,7 @@ export function SearchBar({ placeholder = 'Search...', onSearch }: SearchBarProp
       selectionColor='#ffd700'
       iconColor={colorScheme === "dark" ? "white" : "black"}
       placeholderTextColor={colorScheme === "dark" ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.8)"}
-      inputStyle={colorScheme === "dark" ? { color: 'white' } : { color: 'black' }}
+      inputStyle={[styles.input, colorScheme === "dark" ? { color: 'white'} : { color: 'black' }]}
       autoCapitalize="none"
     />
   );
@@ -58,10 +59,17 @@ export function SearchBar({ placeholder = 'Search...', onSearch }: SearchBarProp
 
 const styles = StyleSheet.create({
   searchBar: {
+    height: 40,
+    justifyContent: 'center',
     margin: 4,
     elevation: 2,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
   },
+  input: {
+    fontSize: 16,
+    paddingVertical: 0,
+    marginTop: -8,
+  }
 });

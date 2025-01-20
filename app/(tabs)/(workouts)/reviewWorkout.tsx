@@ -10,27 +10,57 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { ThemedText } from "@/components/ThemedText";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ThemedView } from "@/components/ThemedView";
 import CurrentDate from "@/components/CurrentDate";
 import { sortByMultipleProperties } from "@/lib/utils";
+import { Dialog } from "@rneui/themed";
+import { WorkoutCompleted } from "@/components/WorkoutCompleted";
+
+type CircuitItemDataType = {
+  actualReps: string;
+  exerciseId: string;
+  exerciseName: string;
+  target: "reps" | "time";
+  targetReps?: string;
+  time?: string;
+  load: number;
+  orderInRoutine: number;
+  set: number;
+  unit: string;
+}
+type ItemDataType = {
+  actualReps: string;
+  exerciseId: string;
+  load: number | undefined;
+  set: number;
+  unit: string;
+}
 
 const { height, width } = Dimensions.get("window")
 
 export default function WorkoutDetail() {
   // hooks
+  const [openDialog, setOpenDialog] = useState(false);
   const { previewImgUri, workoutId, workoutName } = useLocalSearchParams();
   const colorScheme = useColorScheme();
   const tabBarHeight = useBottomTabBarHeight();
-  const workoutLog = useSelector((state: RootState) => state.workoutLog)
+  const workoutLog = useSelector((state: RootState) => state.workoutLog);
 
   // requests
   const saveWorkoutMutation = useMutation({
     mutationFn: (workoutData) => api.workouts.saveWorkout(workoutData),
     onSuccess: (data) => {
-      Alert.alert('Success', 'Workout logged successfully!', [
-        { text: 'OK', onPress: () => console.log("do nothing", data) },
-      ]);
+      // Alert.alert('Success', 'Workout logged successfully!', [
+      //   {
+      //     text: 'OK',
+      //     onPress: () => {
+      //       console.log("do nothing", data)
+      //       // router.replace('/(tabs)/(workouts)')
+      //     } 
+      //   },
+      // ]);
+      setOpenDialog(true)
     },
     onError: (error) => {
       Alert.alert('Error', 'Failed to save workout log. Please try again.');
@@ -103,26 +133,6 @@ export default function WorkoutDetail() {
     }
   }, [workoutLog])
 
-  type CircuitItemDataType = {
-    actualReps: string;
-    exerciseId: string;
-    exerciseName: string;
-    target: "reps" | "time";
-    targetReps?: string;
-    time?: string;
-    load: number;
-    orderInRoutine: number;
-    set: number;
-    unit: string;
-  }
-  type ItemDataType = {
-    actualReps: string;
-    exerciseId: string;
-    load: number | undefined;
-    set: number;
-    unit: string;
-  }
-
   const circuitMappedExercises = (circuitItem: { data: Array<CircuitItemDataType> }) => {
     return circuitItem.data.reduce((result: any, curr: any) => {
       let resultArr = result
@@ -145,6 +155,17 @@ export default function WorkoutDetail() {
       }
       return resultArr
     }, [])
+  }
+
+  const closeSuccessDialog = () => {
+    setOpenDialog(false)
+    router.dismissAll()
+    // router.dismissTo({
+    //   pathname: "/(tabs)/(workouts)/[workoutId]",
+    //   params: {
+    //     workoutId,
+    //   }
+    // })
   }
 
   return (
@@ -317,6 +338,7 @@ export default function WorkoutDetail() {
         </View>
         <FAB
           icon="check"
+          loading={saveWorkoutMutation.isPending}
           size="medium"
           label="Save Workout"
           style={{
@@ -329,6 +351,16 @@ export default function WorkoutDetail() {
             saveWorkoutMutation.mutate(workoutLog)
           }}
         />
+        <Dialog
+          isVisible={openDialog}
+          onBackdropPress={closeSuccessDialog}
+          overlayStyle={{ backgroundColor: Colors[colorScheme ?? 'light'].background, borderWidth: 1, borderColor: Colors[colorScheme ?? 'light'].border }}
+        >
+          <WorkoutCompleted
+            workoutName={workoutName as string}
+            closeDialog={closeSuccessDialog}
+          />
+        </Dialog>
       </SafeAreaView>
     </ImageBackground>
   )
