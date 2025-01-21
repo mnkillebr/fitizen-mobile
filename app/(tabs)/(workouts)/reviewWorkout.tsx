@@ -1,8 +1,8 @@
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { api } from "@/lib/api";
+import { api, apiClient } from "@/lib/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, router } from "expo-router";
-import { View, Text, SafeAreaView, ImageBackground, StyleSheet, Dimensions, Pressable, FlatList, SectionList, Image, Alert } from "react-native";
+import { View, Text, SafeAreaView, ImageBackground, StyleSheet, Dimensions, Pressable, FlatList, SectionList, Image, Alert, ActivityIndicator } from "react-native";
 import { FAB, IconButton } from "react-native-paper";
 import { Colors } from "@/constants/Colors";
 
@@ -39,7 +39,7 @@ type ItemDataType = {
 
 const { height, width } = Dimensions.get("window")
 
-export default function WorkoutDetail() {
+export default function ReviewWorkout() {
   // hooks
   const [openDialog, setOpenDialog] = useState(false);
   const { previewImgUri, workoutId, workoutName } = useLocalSearchParams();
@@ -49,7 +49,7 @@ export default function WorkoutDetail() {
 
   // requests
   const saveWorkoutMutation = useMutation({
-    mutationFn: (workoutData) => api.workouts.saveWorkout(workoutData),
+    mutationFn: (workoutData) => apiClient.workouts.saveWorkout(workoutData),
     onSuccess: (data) => {
       // Alert.alert('Success', 'Workout logged successfully!', [
       //   {
@@ -171,7 +171,7 @@ export default function WorkoutDetail() {
   return (
     <ImageBackground
       key={workoutId as string}
-      source={{ uri: previewImgUri ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
+      source={{ uri: previewImgUri as string ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
       style={styles.backgroundImage}
     >
       <SafeAreaView className="flex-1">
@@ -197,6 +197,7 @@ export default function WorkoutDetail() {
           <FlatList
             data={logData}
             keyExtractor={item => item.circuitId || item.exerciseId}
+            showsVerticalScrollIndicator={false}
             renderItem={({item, index}: { item: { circuitId: string; thumbnail: string; title: string; data: Array<ItemDataType>; target: "reps" | "time"; targetReps?: string; time: string; }, index: number}) => {
               if (item.circuitId) {
                 return (

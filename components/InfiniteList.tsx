@@ -34,7 +34,7 @@ export function InfiniteList<T>({
     return (
       <FlatList
         data={[1, 2, 3, 4, 5]}
-        renderItem={() => <Skeleton height={224} />}
+        renderItem={() => <Skeleton height={196} skeletonStyle={{ backgroundColor: "gray" }} />}
         keyExtractor={(item) => item.toString()}
       />
     );

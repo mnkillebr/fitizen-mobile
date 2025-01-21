@@ -5,7 +5,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedSafeAreaView } from '@/components/ThemeSafeAreaView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { api } from '@/lib/api';
+import { api, apiClient } from '@/lib/api';
 import { resetWorkoutLog, recordSet, cancelWorkout, finishWorkout } from '@/redux/slices/workoutLogSlice';
 import { RootState } from '@/redux/store';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -52,7 +52,7 @@ export default function WorkoutFlowScreen() {
     isRefetching
   } = useQuery({
     queryKey: ['workout', workoutId.toString()],
-    queryFn: () => api.workouts.workoutDetail(workoutId.toString())
+    queryFn: () => apiClient.workouts.workoutDetail(workoutId.toString())
   });
   const { workout, exerciseDetails } = useMemo(() => {
     if (data) {

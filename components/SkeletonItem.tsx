@@ -34,7 +34,7 @@ export function SkeletonItem() {
 
 const styles = StyleSheet.create({
   skeleton: {
-    height: 224,
+    height: 196,
     marginHorizontal: 16,
     marginVertical: 8,
     borderRadius: 8,

@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedSafeAreaView } from "@/components/ThemeSafeAreaView";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { api } from "@/lib/api";
+import { api, apiClient } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, router } from "expo-router";
 import { useMemo, useRef, useState } from "react";
@@ -38,7 +38,7 @@ export default function ProgramDetail() {
     isRefetching,
   } = useQuery({
     queryKey: ['program', programId.toString()],
-    queryFn: () => api.programs.programDetail(programId.toString())
+    queryFn: () => apiClient.programs.programDetail(programId.toString())
   });
 
   // functions and constants

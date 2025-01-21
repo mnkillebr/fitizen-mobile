@@ -37,7 +37,7 @@ export default function LibraryScreen() {
       <ThemedView className='p-4'>
         {isLoading ? (
           <ScrollView showsVerticalScrollIndicator={false}>
-            {[...Array(3)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={224} className='my-2 rounded-lg' />)}
+            {[...Array(3)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={196} className='my-2 rounded-lg' skeletonStyle={{ backgroundColor: "gray" }} />)}
           </ScrollView>
         ) : <InfiniteList
           data={flatData}

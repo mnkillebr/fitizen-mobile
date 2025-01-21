@@ -17,6 +17,7 @@ import { useDispatch } from "react-redux";
 import { startWorkout } from "@/redux/slices/workoutLogSlice";
 import { useAuth } from "@/providers/auth-provider";
 import { ScrollView } from "react-native-gesture-handler";
+import { formatDuration } from "@/lib/utils";
 
 const { height, width } = Dimensions.get("window")
 
@@ -214,7 +215,7 @@ export default function WorkoutDetail() {
         <View className="flex-1 mt-8" style={{ paddingBottom: (tabBarHeight-8) }}>
           {isLoading ? (
             <ScrollView showsVerticalScrollIndicator={false} className="p-4">
-              {[...Array(4)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={80} className='my-2 rounded-lg' />)}
+              {[...Array(4)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={80} className='my-2 rounded-lg' skeletonStyle={{ backgroundColor: "gray" }} />)}
             </ScrollView>
           ) : (
             <>
@@ -244,6 +245,7 @@ export default function WorkoutDetail() {
                   <SectionList
                     sections={exerciseDetails}
                     keyExtractor={(item, index) => item + index}
+                    showsVerticalScrollIndicator={false}
                     renderItem={({item}) => (
                       <Pressable onPress={() => {
                         setOpenDialog({
@@ -308,13 +310,37 @@ export default function WorkoutDetail() {
                   />
                 </TabView.Item>
                 <TabView.Item className="px-2 pt-2 w-full">
-                  <FlatList
-                    data={logs ?? []}
-                    renderItem={({ item }) => <Text>Log</Text>}
+                  <SectionList
+                    sections={[{ data: logs }] ?? []}
                     keyExtractor={item => item.id}
                     showsVerticalScrollIndicator={false}
-                    keyboardDismissMode="on-drag"
-                    keyboardShouldPersistTaps="handled"
+                    renderItem={({ item }) => (
+                      <ThemedView className="flex-row justify-between px-2 py-1 my-1 rounded">
+                        <Text className="font-medium w-20" style={{ color: Colors[colorScheme ?? 'light'].text }}>{new Date(item.date).toLocaleDateString()}</Text>
+                        <Text className="font-medium w-20" style={{ color: Colors[colorScheme ?? 'light'].text }}>{formatDuration(parseInt(item.duration))}</Text>
+                        <Pressable
+                          onPress={() => {
+                            router.push({
+                              pathname: "/(tabs)/(workouts)/viewLog",
+                              params: {
+                                logId: item.id,
+                                workoutImgUri: workout?.s3ImageKey,
+                                workoutName: workout.name,
+                              }
+                            })
+                          }}
+                        >
+                          <Text className="font-medium w-20" style={{ color: Colors[colorScheme ?? 'light'].tint }}>View Log</Text>
+                        </Pressable>
+                      </ThemedView>
+                    )}
+                    renderSectionHeader={({section}) => (
+                      <View className="flex-row justify-between px-2 py-1 rounded-t" style={{ backgroundColor: Colors[colorScheme ?? 'light'].backgroundMuted }}>
+                        <Text className="font-medium w-20" style={{ color: Colors[colorScheme ?? 'light'].text }}>Date</Text>
+                        <Text className="font-medium w-20" style={{ color: Colors[colorScheme ?? 'light'].text }}>Duration</Text>
+                        <Text className="font-medium w-20 invisible">View</Text>
+                      </View>
+                    )}
                     ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No workout logs</Text>}
                   />
                 </TabView.Item>

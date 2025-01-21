@@ -15,3 +15,9 @@ export function sortByMultipleProperties<T>(array: T[], criteria: SortCriteria<T
     return 0;
   });
 }
+
+export function formatDuration(duration: number) {
+  const hours = Math.floor(duration / 3600000);
+  const minutes = Math.floor((duration % 3600000) / 60000);
+  return hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`
+}

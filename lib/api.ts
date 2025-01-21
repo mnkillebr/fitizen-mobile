@@ -243,6 +243,10 @@ class ApiClient {
       const endpoint = `/api/mobile/workouts/${workoutId}`;
       return this.fetch(endpoint);
     },
+    workoutLog: async (logId: string) => {
+      const endpoint = `/api/mobile/workouts/logs/${logId}`;
+      return this.fetch(endpoint);
+    },
     saveWorkout: async (workoutData) => {
       const endpoint = `/api/mobile/workouts`;
       return this.fetch(endpoint, {

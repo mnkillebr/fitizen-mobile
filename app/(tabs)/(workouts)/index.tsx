@@ -8,7 +8,7 @@ import { ThemedSafeAreaView } from '@/components/ThemeSafeAreaView';
 import { SearchBar } from '@/components/SearchBar';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api, apiClient } from '@/lib/api';
 import { Link } from 'expo-router';
 import { Skeleton } from '@rneui/themed';
 import { useSelector } from 'react-redux';
@@ -24,7 +24,7 @@ export default function WorkoutsScreen() {
     isRefetching
   } = useQuery({
     queryKey: ['workouts', searchQuery],
-    queryFn: () => api.workouts.list(searchQuery)
+    queryFn: () => apiClient.workouts.list(searchQuery)
   });
 
   const workoutState = useSelector((state: RootState) => state.workoutLog)
@@ -38,7 +38,7 @@ export default function WorkoutsScreen() {
         />
         {isLoading ? (
           <ScrollView showsVerticalScrollIndicator={false}>
-            {[...Array(3)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={224} className='my-2 rounded-lg' />)}
+            {[...Array(3)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={196} className='my-2 rounded-lg' skeletonStyle={{ backgroundColor: "gray" }} />)}
           </ScrollView>
         ) : <FlatList
           data={workouts ?? []}
