@@ -47,7 +47,7 @@ const Item = ({title}: ItemProps) => (
 );
 
 export default function ProgramsScreen() {
-  const { signOut } = useAuth()
+  const { signOut } = useAuth();
   // console.log("auth", auth?.session.user)
   const [searchQuery, setSearchQuery] = useState('');
   const {
@@ -61,8 +61,13 @@ export default function ProgramsScreen() {
     queryFn: () => apiClient.programs.list(searchQuery),
   });
 
-  if (!isLoading && error?.message === "Unauthorized") {
-    Alert.alert('Unauthorized Request', 'You will be signed out', [
+  if (!isLoading && error) {
+    const errorMessage = error?.message
+    const alertPrompt = errorMessage === "Unauthorized"
+      ? "Unauthorized Request"
+      : errorMessage === "Invalid token"
+      ? "Session expired" : "Unauthorized"
+    Alert.alert(alertPrompt, 'You will be signed out', [
       {
         text: 'OK',
         onPress: signOut 

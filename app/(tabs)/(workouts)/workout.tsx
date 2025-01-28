@@ -13,7 +13,8 @@ import { Dialog } from '@rneui/themed';
 import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Image, ImageBackground, Keyboard, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { ImageBackground, Keyboard, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { Image } from 'expo-image';
 import { FAB, IconButton, TextInput, } from 'react-native-paper';
 import { useDispatch, useSelector } from "react-redux";
 
@@ -42,6 +43,10 @@ export default function WorkoutFlowScreen() {
   const countdownRef = useRef<CountdownHandle>(null);
   const [currentLoad, setCurrentLoad] = useState<string | undefined>(undefined);
   const [currentReps, setCurrentReps] = useState<string | undefined>(undefined);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showStopwatch, setShowStopwatch] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [countdownRunning, setCountdownRunning] = useState(false);
   const dispatch = useDispatch()
 
   const {
@@ -112,6 +117,21 @@ export default function WorkoutFlowScreen() {
     }
   }, [exerciseDetails])
 
+  useEffect(() => {
+    if (restMappedDetails.length) {
+      preloadImages();
+    }
+  }, [currentIndex, restMappedDetails]);
+  
+   // Preload adjacent images
+   const preloadImages = () => {
+    const preloadUris = [currentIndex, currentIndex + 1, currentIndex - 1]
+      .filter((index) => restMappedDetails[index])
+      .map((index) => restMappedDetails[index].gif || restMappedDetails[index].img);
+
+    preloadUris.forEach((uri) => Image.prefetch(uri));
+  };
+
   const handleStopwatchStateChange = (running: boolean) => {
     setWorkoutPaused(!running);
   };
@@ -133,15 +153,11 @@ export default function WorkoutFlowScreen() {
     countdownRef.current?.reset(time);
   }
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [showStopwatch, setShowStopwatch] = useState(false);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [countdownRunning, setCountdownRunning] = useState(false);
-
   const currentImage = restMappedDetails[currentIndex].gif || restMappedDetails[currentIndex].img
   const nextImage = restMappedDetails[currentIndex+1] ? (restMappedDetails[currentIndex+1].gif || restMappedDetails[currentIndex+1].img) : undefined
+  const skip = ((!restMappedDetails[currentIndex].gif && restMappedDetails[currentIndex].rest !== "None") || countdownRunning || !showStopwatch)
   // console.log("details", exerciseDetails)
-  // console.log("on workout screen first", showStopwatch, restMappedDetails[currentIndex].thumbnail)
+  // console.log("on workout screen first", showStopwatch, restMappedDetails[currentIndex])
 
   return (
     // <ImageBackground
@@ -151,7 +167,7 @@ export default function WorkoutFlowScreen() {
       
     // </ImageBackground>
     <ThemedSafeAreaView className='flex-1 relative'>
-      <ThemedView className='p-4' onTouchStart={Keyboard.dismiss}>
+      <ThemedView className='' onTouchStart={Keyboard.dismiss}>
         <View className='absolute top-0 z-20'>
           <IconButton
             icon="arrow-left"
@@ -161,13 +177,15 @@ export default function WorkoutFlowScreen() {
             onPress={() => setOpenDialog(true)}
           />
         </View>
-        <Text className='absolute top-4 inset-x-0 z-10 font-bold text-2xl text-center text-[#eeeeec]' style={styles.textShadow}>{workout.name}</Text>
+        <Text className='absolute top-2 inset-x-0 z-10 font-bold text-2xl text-center text-[#eeeeec]' style={styles.textShadow}>{workout.name}</Text>
         <Image
           key={currentImage}
           source={{ uri: currentImage }}
-          style={{ width: "100%", height: 640, borderRadius: 4, alignSelf: 'center', opacity: showStopwatch ? 1 : 0.5 }}
+          style={{ width: "100%", aspectRatio: 9/16, borderRadius: 4, alignSelf: 'center', opacity: showStopwatch ? 1 : 0.5 }}
+          contentFit="cover"
+          transition={100}
         />
-        <View className="absolute top-0 inset-x-0">
+        <View className="absolute -top-2 inset-x-0">
           {showStopwatch ? (
             <Stopwatch
               ref={stopwatchRef}
@@ -184,15 +202,19 @@ export default function WorkoutFlowScreen() {
               showControls={false}
               showReset={false}
               showSound={true}
+              showPlay={false}
               label="Get Ready!"
               // defaultTime={1}
               onStateChange={handleCountdownStateChange}
-              onCountdownEnd={() => setShowStopwatch(true)}
+              onCountdownEnd={() => {
+                setCountdownRunning(false)
+                setShowStopwatch(true)
+              }}
             />
           )}
         </View>
         {!restMappedDetails[currentIndex].gif && restMappedDetails[currentIndex].rest !== "None" ? (
-          <View className="absolute bottom-48 inset-x-0">
+          <View className="absolute bottom-28 inset-x-0">
             <CountdownTimer
               ref={countdownRef}
               showPresetTimes={false}
@@ -200,6 +222,7 @@ export default function WorkoutFlowScreen() {
               showCustomInput={false}
               showControls={false}
               showReset={false}
+              showPlay={false}
               showSound={true}
               onCountdownEnd={() => {
                 setCurrentIndex(currentIndex+1)
@@ -216,7 +239,7 @@ export default function WorkoutFlowScreen() {
             <Text className='text-3xl font-semibold text-center text-[#eeeeec]' style={styles.textShadow}>Rest Period</Text>
           </View>
         ) : (
-          <View className="absolute bottom-8 inset-x-0">
+          <View className="absolute -bottom-2 inset-x-0">
             {restMappedDetails[currentIndex].target === "time" && restMappedDetails[currentIndex].time !== "None" ? (
               <CountdownTimer
                 ref={countdownRef}
@@ -225,15 +248,17 @@ export default function WorkoutFlowScreen() {
                 showCustomInput={false}
                 showControls={false}
                 showSound={true}
+                showPlay={false}
+                // showReset={false}
                 onStateChange={setCountdownRunning}
                 // defaultTime={1}
                 defaultTime={restMappedDetails[currentIndex].time.includes("min") ? parseInt(restMappedDetails[currentIndex].time) * 60 : parseInt(restMappedDetails[currentIndex].time)}
               />
             ) : null}
-            <Text className='text-lg font-semibold ml-8 text-[#eeeeec]' style={styles.textShadow}>Current Exercise:</Text>
-            <Text className='text-lg font-bold ml-8 text-[#eeeeec]' style={styles.textShadow}>{restMappedDetails[currentIndex].name}</Text>
+            <Text className='text-lg font-semibold ml-4 text-[#eeeeec]' style={styles.textShadow}>Current Exercise:</Text>
+            <Text className='text-lg font-bold ml-4 text-[#eeeeec]' style={styles.textShadow}>{restMappedDetails[currentIndex].name}</Text>
             
-            <View className='flex-row gap-x-4 gap-y-2 ml-8 flex-wrap w-2/3'>
+            <View className='flex-row gap-x-4 gap-y-2 ml-4 flex-wrap w-2/3'>
               <View className='flex-col'>
                 <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Sets</Text>
                 <Text className='text-[#eeeeec]'>{restMappedDetails[currentIndex].currentSet}/{restMappedDetails[currentIndex].sets}</Text>
@@ -288,17 +313,19 @@ export default function WorkoutFlowScreen() {
           </View>
         )}
         {nextImage && (
-          <View className="absolute bottom-6 right-4">
+          <View className="absolute -bottom-2 right-4">
             <Text className='relative top-6 z-10 text-lg font-semibold text-[#eeeeec]' style={styles.textShadow}>Up Next:</Text>
             <Image
               key={nextImage}
               source={{ uri: nextImage }}
               style={{ width: 100, aspectRatio: 4/3, borderRadius: 4, alignSelf: 'center', opacity: 0.7 }}
+              contentFit="cover"
+              transition={200}
             />
           </View>
         )}
       </ThemedView>
-      <View className="flex-row w-full px-3 justify-between absolute" style={{ bottom: tabBarHeight+12 }}>
+      <View className="flex-row w-full px-3 justify-between absolute" style={{ bottom: tabBarHeight ? tabBarHeight + 12 : 32 }}>
         <FAB
           icon="restart"
           size="medium"
@@ -312,6 +339,7 @@ export default function WorkoutFlowScreen() {
           onPress={() => {
             setCurrentIndex(0)
             setShowStopwatch(false)
+            setCountdownRunning(true)
             dispatch(resetWorkoutLog())
           }}
         />
@@ -328,47 +356,57 @@ export default function WorkoutFlowScreen() {
           onPress={handleTogglePause}
         />
         <FAB
-          icon={nextImage ? "chevron-right" : "flag-checkered"}
+          icon={nextImage && skip ? "timer-sand" : nextImage ? "chevron-right" : "flag-checkered"}
           size="medium"
-          label={nextImage ? "Next" : "Finish"}
+          label={nextImage && skip ? "Skip" : nextImage ? "Next" : "Finish"}
           style={{ ...styles.nextButton, backgroundColor: Colors[colorScheme ?? 'light'].tint }}
           color="black"
-          disabled={((!restMappedDetails[currentIndex].gif && restMappedDetails[currentIndex].rest !== "None") || countdownRunning || !showStopwatch)}
           onPress={() => {
             // console.log("current time", stopwatchRef.current?.getCurrentTime())
-            const currentSetData = {
-              circuitId: restMappedDetails[currentIndex].circuitId,
-              exerciseId: restMappedDetails[currentIndex].exerciseId,
-              exerciseName: restMappedDetails[currentIndex].name,
-              exerciseThumbnail: restMappedDetails[currentIndex].thumbnail,
-              orderInRoutine: restMappedDetails[currentIndex].orderInRoutine,
-              set: {
-                set: restMappedDetails[currentIndex].currentSet,
-                actualReps: currentReps,
-                load: currentLoad ? parseInt(currentLoad) : undefined,
-                unit: "pound",
-              },
-              target: restMappedDetails[currentIndex].target,
-              targetReps: restMappedDetails[currentIndex].reps ?? undefined,
-              time: restMappedDetails[currentIndex].time ?? undefined,
-            }
-            // console.log(currentSetData)
-            dispatch(recordSet(currentSetData))
-            if (restMappedDetails[currentIndex+1]) {
-              setCurrentIndex(currentIndex+1)
-              setCurrentLoad("")
-              setCurrentReps("")
+            if (!showStopwatch) {
+              setCountdownRunning(false)
+              setShowStopwatch(true)
             } else {
-              const workoutDuration = `${stopwatchRef.current?.getCurrentTime()}`
-              dispatch(finishWorkout(workoutDuration))
-              router.push({
-                pathname: "/(tabs)/(workouts)/reviewWorkout",
-                params: {
-                  workoutId,
-                  previewImgUri: workout.s3ImageKey,
-                  workoutName: workout.name,
+              setCountdownRunning(false)
+              const currentSetData = {
+                circuitId: restMappedDetails[currentIndex].circuitId,
+                exerciseId: restMappedDetails[currentIndex].exerciseId,
+                exerciseName: restMappedDetails[currentIndex].name,
+                exerciseThumbnail: restMappedDetails[currentIndex].thumbnail,
+                orderInRoutine: restMappedDetails[currentIndex].orderInRoutine,
+                set: {
+                  set: restMappedDetails[currentIndex].currentSet,
+                  actualReps: currentReps,
+                  load: currentLoad ? parseInt(currentLoad) : undefined,
+                  unit: "pound",
+                },
+                target: restMappedDetails[currentIndex].target,
+                targetReps: restMappedDetails[currentIndex].reps ?? undefined,
+                time: restMappedDetails[currentIndex].time ?? undefined,
+              }
+              // console.log(currentSetData)
+              dispatch(recordSet(currentSetData))
+              if (restMappedDetails[currentIndex+1]) {
+                setCurrentIndex(currentIndex+1)
+                setCurrentLoad("")
+                setCurrentReps("")
+                if (restMappedDetails[currentIndex+1].time) {
+                  const newTime = restMappedDetails[currentIndex+1].time.includes("min") ? parseInt(restMappedDetails[currentIndex+1].time) * 60 : parseInt(restMappedDetails[currentIndex+1].time)
+                  handleResetCountdown(newTime)
+                  countdownRef.current?.resume();
                 }
-              })
+              } else {
+                const workoutDuration = `${stopwatchRef.current?.getCurrentTime()}`
+                dispatch(finishWorkout(workoutDuration))
+                router.push({
+                  pathname: "/(tabs)/(workouts)/reviewWorkout",
+                  params: {
+                    workoutId,
+                    previewImgUri: workout.s3ImageKey,
+                    workoutName: workout.name,
+                  }
+                })
+              }
             }
           }}
         />

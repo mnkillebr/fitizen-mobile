@@ -13,6 +13,8 @@ import { QueryProvider } from '@/providers/query-provider';
 import { store } from '@/redux/store';
 import { AuthProvider } from '@/providers/auth-provider';
 import DeepLinkHandler from '@/providers/deep-links';
+import { BottomSheetProvider } from '@/providers/bottom-sheet-provider';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -38,9 +40,13 @@ export default function RootLayout() {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <QueryProvider>
           <AuthProvider>
-            <DeepLinkHandler />
-            <Slot />
-            <StatusBar style="auto" />
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <BottomSheetProvider>
+                <DeepLinkHandler />
+                <Slot />
+                <StatusBar style="auto" />
+              </BottomSheetProvider>
+            </GestureHandlerRootView>
           </AuthProvider>
         </QueryProvider>
       </ThemeProvider>

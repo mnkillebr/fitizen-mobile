@@ -21,11 +21,12 @@ type CircuitItemDataType = {
   actualReps: string;
   exerciseId: string;
   exerciseName: string;
-  target: "reps" | "time";
+  // target: "reps" | "time";
+  notes?: string;
   targetReps?: string;
   time?: string;
   load: number;
-  orderInRoutine: number;
+  orderInBlock: number;
   set: number;
   unit: string;
 }
@@ -39,17 +40,17 @@ type ItemDataType = {
 
 const { height, width } = Dimensions.get("window")
 
-export default function ReviewWorkout() {
+export default function ReviewProgramWorkout() {
   // hooks
   const [openDialog, setOpenDialog] = useState(false);
-  const { previewImgUri, workoutId, workoutName } = useLocalSearchParams();
+  const { previewImgUri, programId, programName } = useLocalSearchParams();
   const colorScheme = useColorScheme();
   const tabBarHeight = useBottomTabBarHeight();
-  const workoutLog = useSelector((state: RootState) => state.workoutLog);
+  const programWorkoutLog = useSelector((state: RootState) => state.programWorkoutLog);
 
   // requests
-  const saveWorkoutMutation = useMutation({
-    mutationFn: (workoutData) => apiClient.workouts.saveWorkout(workoutData),
+  const saveProgramWorkoutMutation = useMutation({
+    mutationFn: (workoutData) => apiClient.programs.saveProgramWorkout(workoutData),
     onSuccess: (data) => {
       // Alert.alert('Success', 'Workout logged successfully!', [
       //   {
@@ -68,13 +69,13 @@ export default function ReviewWorkout() {
   });
 
   const logData = useMemo(() => {
-    if (workoutLog.exerciseLogs) {
-      return workoutLog.exerciseLogs.reduce((result, curr) => {
+    if (programWorkoutLog.exerciseLogs) {
+      return programWorkoutLog.exerciseLogs.reduce((result, curr) => {
         let resultArr = result
-        if (curr.circuitId) {  
-          if (resultArr.find(log => log.circuitId === curr.circuitId)) {
+        if (curr.programBlockId) {  
+          if (resultArr.find(log => log.programBlockId === curr.programBlockId)) {
             resultArr = resultArr.map(log => {
-              if (log.circuitId === curr.circuitId) {
+              if (log.programBlockId === curr.programBlockId) {
                 return {
                   ...log,
                   data: sortByMultipleProperties([
@@ -83,14 +84,13 @@ export default function ReviewWorkout() {
                       ...set,
                       exerciseId: curr.exerciseId,
                       exerciseName: curr.exerciseName,
-                      orderInRoutine: curr.orderInRoutine,
-                      target: curr.target,
+                      orderInBlock: curr.orderInBlock,
                       targetReps: curr.targetReps,
                       time: curr.time,
                     }))
                   ], [
                     { key: "set", order: "asc" },
-                    { key: "orderInRoutine", order: "asc" },
+                    { key: "orderInBlock", order: "asc" },
                   ])
                 }
               } else {
@@ -99,20 +99,19 @@ export default function ReviewWorkout() {
             })
           } else {
             resultArr = resultArr.concat({
-              title: `Circuit`,
+              title: `Block`,
               data: sortByMultipleProperties(curr.sets.map(set => ({
                 ...set,
                 exerciseId: curr.exerciseId,
                 exerciseName: curr.exerciseName,
-                orderInRoutine: curr.orderInRoutine,
-                target: curr.target,
+                orderInBlock: curr.orderInBlock,
                 targetReps: curr.targetReps,
                 time: curr.time,
               })), [
                 { key: "set", order: "asc" },
-                { key: "orderInRoutine", order: "asc" },
+                { key: "orderInBlock", order: "asc" },
               ]),
-              circuitId: curr.circuitId,
+              programBlockId: curr.programBlockId,
             })
           }
         } else {
@@ -121,7 +120,6 @@ export default function ReviewWorkout() {
             exerciseId: curr.exerciseId,
             data: curr.sets.map(set => ({...set, exerciseId: curr.exerciseId})),
             thumbnail: curr.exerciseThumbnail,
-            target: curr.target,
             targetReps: curr.targetReps,
             time: curr.time,
           })
@@ -131,17 +129,17 @@ export default function ReviewWorkout() {
     } else {
       return []
     }
-  }, [workoutLog])
+  }, [programWorkoutLog])
 
   const circuitMappedExercises = (circuitItem: { data: Array<CircuitItemDataType> }) => {
     return circuitItem.data.reduce((result: any, curr: any) => {
       let resultArr = result
       if (resultArr.find((obj: { set: number }) => obj.set === parseInt(curr.set))) {
-        resultArr = resultArr.map((obj: { set: number, exercises: Array<{ orderInRoutine: number }> }) => {
+        resultArr = resultArr.map((obj: { set: number, exercises: Array<{ orderInBlock: number }> }) => {
           if (obj.set === parseInt(curr.set)) {
             return {
               ...obj,
-              exercises: obj.exercises.concat(curr).sort((a, b) => a.orderInRoutine - b.orderInRoutine)
+              exercises: obj.exercises.concat(curr).sort((a, b) => a.orderInBlock - b.orderInBlock)
             }
           } else {
             return obj
@@ -170,7 +168,7 @@ export default function ReviewWorkout() {
 
   return (
     <ImageBackground
-      key={workoutId as string}
+      key={programId as string}
       source={{ uri: previewImgUri as string ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
       style={styles.backgroundImage}
     >
@@ -178,11 +176,10 @@ export default function ReviewWorkout() {
         <View className="flex-row items-center justify-between">
           <IconButton
             icon="arrow-left"
-            iconColor="black"
-            style={{ backgroundColor: Colors[colorScheme ?? 'light'].tint }}
+            iconColor={Colors[colorScheme ?? 'light'].tint}
             onPress={() => router.back()}
           />
-          <Text className='font-bold text-2xl text-center text-[#eeeeec]' style={styles.textShadow}>{workoutName}</Text>
+          <Text className='font-bold text-2xl text-center text-[#eeeeec]' style={styles.textShadow}>{programName}</Text>
           <IconButton
             icon="arrow-left"
             iconColor="black"
@@ -190,29 +187,29 @@ export default function ReviewWorkout() {
           />
         </View>
         <View className="flex-row justify-between px-4">
-          <Text className='font-bold text-center text-[#eeeeec]' style={styles.textShadow}>New Workout Log</Text>
+          <Text className='font-bold text-center text-[#eeeeec]' style={styles.textShadow}>New Program Log</Text>
           <CurrentDate className='font-bold text-center text-[#eeeeec]' style={styles.textShadow} />
         </View>
         <View className="px-4 mt-2 flex-1">
           <FlatList
             data={logData}
-            keyExtractor={item => item.circuitId || item.exerciseId}
+            keyExtractor={item => item.programBlockId || item.exerciseId}
             showsVerticalScrollIndicator={false}
-            renderItem={({item, index}: { item: { circuitId: string; thumbnail: string; title: string; data: Array<ItemDataType>; target: "reps" | "time"; targetReps?: string; time: string; }, index: number}) => {
-              if (item.circuitId) {
+            renderItem={({item, index}: { item: { programBlockId: string; thumbnail: string; title: string; data: Array<ItemDataType>; target: "reps" | "time"; targetReps?: string; time: string; }, index: number}) => {
+              if (item.programBlockId) {
                 return (
                   <View className="flex-col my-1" style={{ paddingBottom: logData.length === (index+1) ? tabBarHeight : 0 }}>
-                    <Text className="text-[#eeeeec] font-bold" style={styles.textShadow}>{`Circuit #${logData.filter(log => log.circuitId).findIndex(log => log.circuitId === item.circuitId) + 1}:`}</Text>
+                    <Text className="text-[#eeeeec] font-bold" style={styles.textShadow}>{`Block #${logData.filter(log => log.programBlockId).findIndex(log => log.programBlockId === item.programBlockId) + 1}:`}</Text>
                     <View className="border-2 border-dashed border-gray-200 p-2 rounded gap-y-2">
                       {circuitMappedExercises(item).map((circuitRound: {set: number; exercises: Array<CircuitItemDataType>}, circuitIdx: number) => {
                         return (
-                          <ThemedView key={`${item.circuitId}-round-${circuitRound.set}`} className="p-1 flex-col rounded w-full">
+                          <ThemedView key={`${item.programBlockId}-round-${circuitRound.set}`} className="p-1 flex-col rounded w-full">
                             <Text className="dark:text-[#eeeeec] font-bold mb-1">Round {circuitRound.set}</Text>
                             <View className="flex-col gap-1">
                               {circuitRound.exercises.map((exercise: CircuitItemDataType, exIdx: number) => (
                                 <View
-                                  key={`${item.circuitId}-round-${circuitRound.set}-exercise-${exercise.exerciseId}-${exIdx}`}
-                                  className={`flex-row w-full gap-x-2 py-2 ${(exIdx + 1) < circuitRound.exercises.length ? "border-b-hairline border-white" : ""}`}
+                                  key={`${item.programBlockId}-round-${circuitRound.set}-exercise-${exercise.exerciseId}-${exIdx}`}
+                                  className={`flex-row w-full gap-2 py-2 flex-wrap ${(exIdx + 1) < circuitRound.exercises.length ? "border-b-hairline border-white" : ""}`}
                                 >
                                   <View className="w-[calc(40%)] overflow-hidden">
                                     <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Name</Text>
@@ -220,7 +217,7 @@ export default function ReviewWorkout() {
                                   </View>
                                   <View className="w-14">
                                     <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Target</Text>
-                                    <Text className="text-sm dark:text-[#eeeeec]">{exercise.target === "reps" ? `${exercise.targetReps} reps`: exercise.time}</Text>
+                                    <Text className="text-sm dark:text-[#eeeeec]">{exercise.targetReps ? `${exercise.targetReps} reps`: exercise.time}</Text>
                                   </View>
                                   <View className="">
                                     <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Reps</Text>
@@ -230,6 +227,12 @@ export default function ReviewWorkout() {
                                     <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Load</Text>
                                     <Text className="w-fit text-sm dark:text-[#eeeeec]">{exercise.load ? exercise.load : "None"}</Text>
                                   </View>
+                                  {exercise.notes ? (
+                                    <View className="">
+                                      <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Notes</Text>
+                                      <Text className="w-fit text-sm dark:text-[#eeeeec]">{exercise.notes}</Text>
+                                    </View>
+                                  ) : null}
                                 </View>
                               ))}
                             </View>
@@ -259,7 +262,7 @@ export default function ReviewWorkout() {
                             <View className="flex-row flex-wrap max-w-full gap-x-4 gap-y-0">
                               <View className="w-14">
                                 <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Target</Text>
-                                <Text className="text-sm dark:text-[#eeeeec]">{item.target === "reps" ? `${item.targetReps} reps`: item.time}</Text>
+                                <Text className="text-sm dark:text-[#eeeeec]">{item.targetReps ? `${item.targetReps} reps`: item.time}</Text>
                               </View>
                               <View className="">
                                 <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Reps</Text>
@@ -280,66 +283,10 @@ export default function ReviewWorkout() {
             }}
             ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Exercises</Text>}
           />
-          {/* <SectionList
-            sections={logData}
-            keyExtractor={(item, index) => item + index}
-            renderItem={({section, item}) => {
-              if (section.circuitId) {
-                return (
-                  <ThemedView className="my-0.5 mx-1 p-1 flex-row gap-2 rounded w-full overflow-hidden">
-                    <Text className="dark:text-[#eeeeec] font-bold">Set {item.set}</Text>
-                  </ThemedView>
-                )
-              } else {
-                return (
-                  <ThemedView className="my-0.5 mx-1 p-1 flex-row gap-2 rounded w-full overflow-hidden">
-                    <View className="flex-row w-full gap-10">
-                      <Text className="dark:text-[#eeeeec] font-bold">Set {item.set}</Text>
-                      <View className="flex-row flex-wrap max-w-full gap-x-4 gap-y-0">
-                        <View className="flex flex-col justify-between">
-                          <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Reps Completed</Text>
-                          <Text className="w-10 text-sm h-5 dark:text-[#eeeeec]">{item.actualReps}</Text>
-                        </View>
-                        <View className="flex flex-col justify-between">
-                          <Text className="text-xs self-start font-medium dark:text-[#eeeeec]">Load</Text>
-                          <Text className="w-fit text-sm h-5 dark:text-[#eeeeec]">{item.load ? item.load : "None"}</Text>
-                        </View>
-                      </View>
-                    </View>
-                  </ThemedView>
-                )
-              }
-            }}
-            renderSectionHeader={({section: {title, thumbnail, target, targetReps, time}}) => {
-              if (title && thumbnail) {
-                return (
-                  <View className="flex-row rounded items-center gap-3 mt-2">
-                    <Image
-                      source={{ uri: thumbnail ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
-                      style={{ height: 50, aspectRatio: 4/3, borderRadius: 4, alignSelf: 'center' }}
-                    />
-                    <View className="flex-col gap-1">
-                      <Text className="font-bold text-[#eeeeec] text-lg" style={styles.textShadow}>{title}</Text>
-                      <View className="flex flex-row gap-1">
-                        <Text className="self-start font-medium dark:text-[#eeeeec]" style={styles.textShadow}>Target:</Text>
-                        <Text className="w-14 h-5 dark:text-[#eeeeec]" style={styles.textShadow}>{target === "reps" ? `${targetReps} reps` : time}</Text>
-                      </View>
-                    </View>
-                  </View>
-                )
-              } else if (title) {
-                return <Text className="font-bold text-[#eeeeec] mt-2">{title}</Text>
-              } else return null
-            }}
-            renderSectionFooter={({section: {footer}}) => footer ? (
-              <Text className="font-bold text-[#eeeeec] text-right mb-1">{footer}</Text>
-            ) : null}
-            ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Exercises</Text>}
-          /> */}
         </View>
         <FAB
           icon="check"
-          loading={saveWorkoutMutation.isPending}
+          loading={saveProgramWorkoutMutation.isPending}
           size="medium"
           label="Save Workout"
           style={{
@@ -349,7 +296,10 @@ export default function ReviewWorkout() {
           }}
           color="black"
           onPress={() => {
-            saveWorkoutMutation.mutate(workoutLog)
+            saveProgramWorkoutMutation.mutate({
+              ...programWorkoutLog,
+              action: "saveProgramWorkoutLog",
+            })
           }}
         />
         <Dialog
@@ -358,7 +308,7 @@ export default function ReviewWorkout() {
           overlayStyle={{ backgroundColor: Colors[colorScheme ?? 'light'].background, borderWidth: 1, borderColor: Colors[colorScheme ?? 'light'].border }}
         >
           <WorkoutCompleted
-            workoutName={workoutName as string}
+            workoutName={`${programName} - Week ${programWorkoutLog.programWeek} - Day ${programWorkoutLog.programDay}`}
             closeDialog={closeSuccessDialog}
           />
         </Dialog>

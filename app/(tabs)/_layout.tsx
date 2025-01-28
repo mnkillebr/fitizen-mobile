@@ -1,4 +1,4 @@
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, usePathname } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -12,6 +12,7 @@ import { ThemedView } from '@/components/ThemedView';
 import * as Linking from 'expo-linking';
 
 export default function TabLayout() {
+  const path = usePathname();
   const colorScheme = useColorScheme();
   const { loading, session } = useAuth();
   // const link = Linking.useLinkingURL()
@@ -49,54 +50,56 @@ export default function TabLayout() {
   }
 
   return (
-    <GestureHandlerRootView>
-      <Tabs
-        screenOptions={{
-          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-          headerShown: false,
-          tabBarButton: HapticTab,
-          tabBarBackground: TabBarBackground,
-          tabBarStyle: Platform.select({
-            ios: {
-              // Use a transparent background on iOS to show the blur effect
-              position: 'absolute',
-            },
-            default: {},
-          }),
+    <Tabs
+      screenOptions={{
+        // animation: "shift",
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        headerShown: false,
+        tabBarButton: HapticTab,
+        tabBarBackground: TabBarBackground,
+        tabBarStyle: Platform.select({
+          ios: {
+            // Use a transparent background on iOS to show the blur effect
+            position: 'absolute',
+            display: path.includes('/programWorkout') || path.includes('/workout') ? 'none' : 'flex',
+          },
+          default: {
+            display: path.includes('/programWorkout') || path.includes('/workout') ? 'none' : 'flex',
+          },
+        }),
+      }}
+      initialRouteName="(programs)"
+    >
+      <Tabs.Screen name="index" options={{ href: null }} redirect={true} />
+      <Tabs.Screen
+        name="(programs)"
+        options={{
+          title: 'Programs',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="table.fill" color={color} />,
         }}
-        initialRouteName="(programs)"
-      >
-        <Tabs.Screen name="index" options={{ href: null }} redirect={true} />
-        <Tabs.Screen
-          name="(programs)"
-          options={{
-            title: 'Programs',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="table.fill" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="(workouts)"
-          options={{
-            title: 'Workouts',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="figure.highintensity.intervaltraining" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="(exercises)"
-          options={{
-            title: 'Exercises',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="book.pages.fill" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="settings"
-          options={{
-            title: 'Settings',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="gear" color={color} />,
-            // href: null
-          }}
-        />
-      </Tabs>
-    </GestureHandlerRootView>
+      />
+      <Tabs.Screen
+        name="(workouts)"
+        options={{
+          title: 'Workouts',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="figure.highintensity.intervaltraining" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="(exercises)"
+        options={{
+          title: 'Exercises',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="book.pages.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="gear" color={color} />,
+          // href: null
+        }}
+      />
+    </Tabs>
   );
 }

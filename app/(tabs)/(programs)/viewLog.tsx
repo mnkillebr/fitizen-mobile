@@ -20,27 +20,24 @@ type CircuitItemDataType = {
   exerciseName: string;
   target: "reps" | "time";
   notes?: string;
-  targetReps?: string;
+  reps?: string;
   time?: string;
   load: number;
   orderInRoutine: number;
   set: number;
   unit: string;
 }
+
 type ItemDataType = {
-  actualReps: string;
-  exerciseId: string;
-  load: number | undefined;
-  notes?: string;
+  exercises: CircuitItemDataType[];
   set: number;
-  unit: string;
 }
 
 const { height, width } = Dimensions.get("window")
 
-export default function ViewWorkoutLog() {
+export default function ViewProgramWorkoutLog() {
   // hooks
-  const { logId, workoutImgUri, workoutName } = useLocalSearchParams();
+  const { logId, programImgUri, programName } = useLocalSearchParams();
   const colorScheme = useColorScheme();
   const tabBarHeight = useBottomTabBarHeight();
   const {
@@ -50,104 +47,31 @@ export default function ViewWorkoutLog() {
     refetch,
     isRefetching
   } = useQuery({
-    queryKey: ['workoutLog', logId.toString()],
-    queryFn: () => apiClient.workouts.workoutLog(logId.toString()),
+    queryKey: ['programWorkoutLog', logId.toString()],
+    queryFn: () => apiClient.programs.programWorkoutLog(logId.toString()),
   });
 
-  const logData = useMemo(() => {
+  const {
+    blocks,
+    userLog,
+  } = useMemo(() => {
     if (data) {
-      return data.exerciseLogs.reduce((result, curr) => {
-        let resultArr = result
-        if (curr.circuitId) {  
-          if (resultArr.find(log => log.circuitId === curr.circuitId)) {
-            resultArr = resultArr.map(log => {
-              if (log.circuitId === curr.circuitId) {
-                return {
-                  ...log,
-                  data: sortByMultipleProperties([
-                    ...log.data,
-                    ...curr.sets.map(set => ({
-                      ...set,
-                      exerciseId: curr.exerciseId,
-                      exerciseName: curr.exercise.name,
-                      orderInRoutine: curr.orderInRoutine,
-                      target: curr.target,
-                      targetReps: curr.targetReps,
-                      time: curr.time,
-                    }))
-                  ], [
-                    { key: "set", order: "asc" },
-                    { key: "orderInRoutine", order: "asc" },
-                  ])
-                }
-              } else {
-                return log
-              }
-            })
-          } else {
-            resultArr = resultArr.concat({
-              title: `Circuit`,
-              data: sortByMultipleProperties(curr.sets.map(set => ({
-                ...set,
-                exerciseId: curr.exerciseId,
-                exerciseName: curr.exercise.name,
-                orderInRoutine: curr.orderInRoutine,
-                target: curr.target,
-                targetReps: curr.targetReps,
-                time: curr.time,
-              })), [
-                { key: "set", order: "asc" },
-                { key: "orderInRoutine", order: "asc" },
-              ]),
-              circuitId: curr.circuitId,
-            })
-          }
-        } else {
-          resultArr = resultArr.concat({
-            title: curr.exercise.name,
-            exerciseId: curr.exerciseId,
-            data: curr.sets.map(set => ({...set, exerciseId: curr.exerciseId})),
-            thumbnail: curr.exerciseThumbnail,
-            target: curr.target,
-            targetReps: curr.targetReps,
-            time: curr.time,
-          })
-        }
-        return resultArr
-      }, [])
+      return {
+        blocks: data.mappedBlocks,
+        userLog: data.userLog,
+      }
     } else {
-      return []
+      return {
+        blocks: [],
+        userLog: {}
+      }
     }
   }, [data])
-
-  const circuitMappedExercises = (circuitItem: { data: Array<CircuitItemDataType> }) => {
-    return circuitItem.data.reduce((result: any, curr: any) => {
-      let resultArr = result
-      if (resultArr.find((obj: { set: number }) => obj.set === parseInt(curr.set))) {
-        resultArr = resultArr.map((obj: { set: number, exercises: Array<{ orderInRoutine: number }> }) => {
-          if (obj.set === parseInt(curr.set)) {
-            return {
-              ...obj,
-              exercises: obj.exercises.concat(curr).sort((a, b) => a.orderInRoutine - b.orderInRoutine)
-            }
-          } else {
-            return obj
-          }
-        })
-      } else {
-        resultArr = resultArr.concat({
-          set: parseInt(curr.set),
-          exercises: [curr],
-        })
-      }
-      return resultArr
-    }, [])
-  }
-
+  // console.log(blocks)
   return (
     <ImageBackground
       key={logId as string}
-      source={{ uri: workoutImgUri as string ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
+      source={{ uri: programImgUri as string ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
       style={styles.backgroundImage}
     >
       {isLoading ? (
@@ -162,11 +86,10 @@ export default function ViewWorkoutLog() {
           <View className="flex-row items-center justify-between">
             <IconButton
               icon="arrow-left"
-              iconColor="black"
-              style={{ backgroundColor: Colors[colorScheme ?? 'light'].tint }}
+              iconColor={Colors[colorScheme ?? 'light'].tint}
               onPress={() => router.back()}
             />
-            <Text className='font-bold text-2xl text-center text-[#eeeeec]' style={styles.textShadow}>{workoutName}</Text>
+            <Text className='font-bold text-2xl text-center text-[#eeeeec]' style={styles.textShadow}>{programName}</Text>
             <IconButton
               icon="arrow-left"
               iconColor="black"
@@ -174,28 +97,28 @@ export default function ViewWorkoutLog() {
             />
           </View>
           <View className="flex-row justify-between px-4">
-            <Text className='font-bold text-center text-[#eeeeec]' style={styles.textShadow}>Workout Log</Text>
-            <CurrentDate className='font-bold text-center text-[#eeeeec]' style={styles.textShadow} incomingDate={data.date} />
+            <Text className='font-bold text-center text-[#eeeeec]' style={styles.textShadow}>Log of Week {userLog.programWeek} - Day {userLog.programDay}</Text>
+            <CurrentDate className='font-bold text-center text-[#eeeeec]' style={styles.textShadow} incomingDate={userLog.date} />
           </View>
           <View className="px-4 mt-2 flex-1">
             <FlatList
-              data={logData}
-              keyExtractor={item => item.circuitId || item.exerciseId}
+              data={blocks}
+              keyExtractor={item => item.programBlockId || item.exerciseId}
               showsVerticalScrollIndicator={false}
-              renderItem={({item, index}: { item: { circuitId: string; thumbnail: string; title: string; data: Array<ItemDataType>; target: "reps" | "time"; targetReps?: string; time: string; }, index: number}) => {
-                if (item.circuitId) {
+              renderItem={({item, index}: { item: { blockNumber: number; programBlockId: string; sets: Array<ItemDataType>; target: "reps" | "time"; targetReps?: string; time: string; }, index: number}) => {
+                if (item.programBlockId) {
                   return (
-                    <View className="flex-col my-1" style={{ paddingBottom: logData.length === (index+1) ? tabBarHeight : 0 }}>
-                      <Text className="text-[#eeeeec] font-bold" style={styles.textShadow}>{`Circuit #${logData.filter(log => log.circuitId).findIndex(log => log.circuitId === item.circuitId) + 1}:`}</Text>
+                    <View className="flex-col my-1" style={{ paddingBottom: blocks.length === (index+1) ? tabBarHeight : 0 }}>
+                      <Text className="text-[#eeeeec] font-bold" style={styles.textShadow}>{`Block #${blocks.filter(log => log.programBlockId).findIndex(log => log.programBlockId === item.programBlockId) + 1}:`}</Text>
                       <View className="border-2 border-dashed border-gray-200 p-2 rounded gap-y-2">
-                        {circuitMappedExercises(item).map((circuitRound: {set: number; exercises: Array<CircuitItemDataType>}, circuitIdx: number) => {
+                        {item.sets.map((circuitRound: {set: number; exercises: Array<CircuitItemDataType>}, circuitIdx: number) => {
                           return (
-                            <ThemedView key={`${item.circuitId}-round-${circuitRound.set}`} className="p-1 flex-col rounded w-full">
+                            <ThemedView key={`${item.programBlockId}-round-${circuitRound.set}`} className="p-1 flex-col rounded w-full">
                               <Text className="dark:text-[#eeeeec] font-bold mb-1">Round {circuitRound.set}</Text>
                               <View className="flex-col gap-1">
                                 {circuitRound.exercises.map((exercise: CircuitItemDataType, exIdx: number) => (
                                   <View
-                                    key={`${item.circuitId}-round-${circuitRound.set}-exercise-${exercise.exerciseId}-${exIdx}`}
+                                    key={`${item.programBlockId}-round-${circuitRound.set}-exercise-${exercise.exerciseId}-${exIdx}`}
                                     className={`flex-row flex-wrap w-full gap-2 py-2 ${(exIdx + 1) < circuitRound.exercises.length ? "border-b-hairline border-white" : ""}`}
                                   >
                                     <View className="w-[calc(40%)] overflow-hidden">
@@ -204,7 +127,7 @@ export default function ViewWorkoutLog() {
                                     </View>
                                     <View className="w-14">
                                       <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Target</Text>
-                                      <Text className="text-sm dark:text-[#eeeeec]">{exercise.target === "reps" ? `${exercise.targetReps} reps`: exercise.time}</Text>
+                                      <Text className="text-sm dark:text-[#eeeeec]">{exercise.target === "reps" ? `${exercise.reps} reps`: exercise.time}</Text>
                                     </View>
                                     <View className="">
                                       <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Reps</Text>
@@ -217,7 +140,7 @@ export default function ViewWorkoutLog() {
                                     {exercise.notes ? (
                                       <View className="">
                                         <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Notes</Text>
-                                        <Text className="w-fit text-sm dark:text-[#eeeeec]">{exercise.notes}</Text>
+                                        <Text className="w-fit text-sm dark:text-[#eeeeec]">Here goes a longer one</Text>
                                       </View>
                                     ) : null}
                                   </View>
@@ -231,16 +154,12 @@ export default function ViewWorkoutLog() {
                   )   
                 }
                 return (
-                  <View className="flex-col my-1 rounded" style={{ paddingBottom: logData.length === (index+1) ? tabBarHeight : 0 }}>
+                  <View className="flex-col my-1 rounded" style={{ paddingBottom: blocks.length === (index+1) ? tabBarHeight : 0 }}>
                     <View className="flex-row gap-2">
-                      <Text className="text-[#eeeeec] font-bold" style={styles.textShadow}>{`Exercise #${logData.filter(log => log.exerciseId).findIndex(log => log.exerciseId === item.exerciseId) + 1}:`}</Text>
+                      <Text className="text-[#eeeeec] font-bold" style={styles.textShadow}>{`Exercise #${blocks.filter(log => log.exerciseId).findIndex(log => log.exerciseId === item.exerciseId) + 1}:`}</Text>
                       <Text className="text-[#eeeeec] font-bold" style={styles.textShadow}>{item.title}</Text>
                     </View>
                     <View className="flex-row">
-                      {/* <Image
-                        source={{ uri: item.thumbnail ?? "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/gn88ph2mplriuumncv2a" }}
-                        style={{ height: 50, aspectRatio: 4/3, borderRadius: 4, }}
-                      /> */}
                       {item.data.map((dataItem: ItemDataType, dataIdx: number) => {
                         return (
                           <ThemedView key={`item-${dataItem.exerciseId}`} className="my-0.5 mx-1 p-1 flex-row gap-2 rounded">
@@ -259,12 +178,6 @@ export default function ViewWorkoutLog() {
                                   <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Load</Text>
                                   <Text className="w-fit text-sm dark:text-[#eeeeec]">{dataItem.load ? dataItem.load : "None"}</Text>
                                 </View>
-                                {dataItem.notes ? (
-                                    <View className="">
-                                      <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Notes</Text>
-                                      <Text className="w-fit text-sm dark:text-[#eeeeec]">{dataItem.notes}</Text>
-                                    </View>
-                                  ) : null}
                               </View>
                             </View>
                           </ThemedView>

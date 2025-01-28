@@ -5,17 +5,21 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { api, apiClient } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { Stack, useLocalSearchParams, router } from "expo-router";
+import { Stack, useLocalSearchParams, router, Link } from "expo-router";
 import { useMemo, useRef, useState } from "react";
-import { Dimensions, ImageBackground, Pressable, SafeAreaView, StyleSheet, Text, View, } from "react-native";
+import { Alert, Dimensions, ImageBackground, Pressable, SafeAreaView, StyleSheet, Text, View, } from "react-native";
 import { FAB, Icon, IconButton, ProgressBar } from "react-native-paper";
 import { useSharedValue } from "react-native-reanimated";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import { Dialog, Tab, TabView } from '@rneui/themed';
+import { useAuth } from "@/providers/auth-provider";
+import { useDispatch } from "react-redux";
+import { startProgramWorkout } from "@/redux/slices/programWorkoutLogSlice";
 
 const { height, width } = Dimensions.get("window")
 
 export default function ProgramDetail() {
+  const { signOut } = useAuth();
   // hooks
   const { programId } = useLocalSearchParams();
   const colorScheme = useColorScheme();
@@ -28,10 +32,11 @@ export default function ProgramDetail() {
     content: null,
   });
   const paginationRef = useRef<ICarouselInstance>(null);
+  const dispatch = useDispatch();
 
   // queries
   const {
-    data: program,
+    data,
     isLoading,
     error,
     refetch,
@@ -40,6 +45,43 @@ export default function ProgramDetail() {
     queryKey: ['program', programId.toString()],
     queryFn: () => apiClient.programs.programDetail(programId.toString())
   });
+
+  if (!isLoading && error) {
+    const errorMessage = error?.message
+    const alertPrompt = errorMessage === "Unauthorized"
+      ? "Unauthorized Request"
+      : errorMessage === "Invalid token"
+      ? "Session expired" : "Unauthorized"
+    Alert.alert(alertPrompt, 'You will be signed out', [
+      {
+        text: 'OK',
+        onPress: signOut 
+      },
+    ]);
+  }
+
+  const {
+    program,
+    userCurrentProgramLogs,
+    programDay,
+    programWeek,
+  } = useMemo(() => {
+    if (data) {
+      return {
+        program: data.program,
+        userCurrentProgramLogs: data.userCurrentProgramLogs,
+        programDay: data.programDay,
+        programWeek: data.programWeek,
+      }
+    } else {
+      return {
+        program: null,
+        programDay: null,
+        programWeek: null,
+        userCurrentProgramLogs: []
+      }
+    }
+  }, [data])
 
   // functions and constants
   const programWeeks = useMemo(() => {
@@ -86,7 +128,7 @@ export default function ProgramDetail() {
 			animated: true,
 		});
 	};
-  // console.log("program", program)
+  console.log("program", program, programDay, programWeek, userCurrentProgramLogs)
   
   return (
     <ImageBackground
@@ -213,47 +255,89 @@ export default function ProgramDetail() {
                   >
                     {week.days.length === 4 ? (
                       <View className="flex-1 flex-col gap-3">
-                        {week.days.map(day => (
-                          <Pressable key={day.id} onPress={() => {
-                            setOpenDialog({
-                              open: true,
-                              title: `Week ${week.weekNumber} - Day ${day.dayNumber}`,
-                              content: day
-                            })
-                          }}>
-                            <ThemedView key={day.id} className="rounded-md h-16 px-2 py-0 border border-[#4d4d53]">
-                              <ThemedText className="font-bold">Week {week.weekNumber} - Day {day.dayNumber}</ThemedText>
-                              {day.blocks[0].exercises.map(exercise => (
-                                <View key={exercise.id} className="flex-row justify-between mx-2">
-                                  <ThemedText type="small">{exercise.exercise.name}</ThemedText>
-                                  <ThemedText type="small">{exercise.sets} sets x {exercise.time ? `${exercise.time} sec` : `${exercise.reps} reps`}</ThemedText>
+                        {week.days.map((day, dayIdx) => {
+                          const logExists = userCurrentProgramLogs.find(log => log.programDay === day.dayNumber && log.programWeek === week.weekNumber)
+                          return (
+                            <Pressable key={`${week.id}-${day.id}`} onPress={() => {
+                              setOpenDialog({
+                                open: true,
+                                title: `Week ${week.weekNumber} - Day ${day.dayNumber}`,
+                                content: day
+                              })
+                            }}>
+                              <ThemedView key={`${week.id}-${day.id}-${dayIdx}`} className="rounded-md h-16 px-2 py-0 border border-[#4d4d53]">
+                              <View className="flex-row justify-between">
+                                  <ThemedText className="font-bold">Week {week.weekNumber} - Day {day.dayNumber}</ThemedText>
+                                  {logExists ? (
+                                    <Link
+                                      href={{
+                                        pathname: '/(tabs)/(programs)/viewLog',
+                                        params: { 
+                                          logId: logExists.id,
+                                          programImgUri: program?.s3ImageKey,
+                                          programName: program.name,
+                                        }
+                                      }}
+                                      // asChild
+                                      style={{ color: Colors[colorScheme ?? "light"].tint, textDecorationLine: "underline", alignSelf: "center" }}
+                                    >
+                                      View Log
+                                    </Link>
+                                  ) : null}
                                 </View>
-                              ))}
-                            </ThemedView>
-                          </Pressable>
-                        ))}
+                                {day.blocks[0].exercises.map(exercise => (
+                                  <View key={exercise.id} className="flex-row justify-between mx-2">
+                                    <ThemedText type="small">{exercise.exercise.name}</ThemedText>
+                                    <ThemedText type="small">{exercise.sets} sets x {exercise.time ? `${exercise.time} sec` : `${exercise.reps} reps`}</ThemedText>
+                                  </View>
+                                ))}
+                              </ThemedView>
+                            </Pressable>
+                          )
+                        })}
                       </View>
                     ) : week.days.length === 3 ? (
                       <View className="flex-1 flex-col gap-2">
-                        {week.days.map(day => (
-                          <Pressable key={day.id} onPress={() => {
-                            setOpenDialog({
-                              open: true,
-                              title: `Week ${week.weekNumber} - Day ${day.dayNumber}`,
-                              content: day
-                            })
-                          }}>
-                            <ThemedView key={day.id} className="rounded-md h-24 px-2 py-0 border border-[#4d4d53]">
-                              <ThemedText className="font-bold">Week {week.weekNumber} - Day {day.dayNumber}</ThemedText>
-                              {day.blocks[0].exercises.map(exercise => (
-                                <View key={exercise.id} className="flex-row justify-between mx-2">
-                                  <ThemedText type="small">{exercise.exercise.name}</ThemedText>
-                                  <ThemedText type="small">{exercise.sets} sets x {exercise.time ? `${exercise.time} sec` : `${exercise.reps} reps`}</ThemedText>
+                        {week.days.map((day, dayIdx) => {
+                          const logExists = userCurrentProgramLogs.find(log => log.programDay === day.dayNumber && log.programWeek === week.weekNumber)
+                          return (
+                            <Pressable key={`${week.id}-${day.id}-${dayIdx}`} onPress={() => {
+                              setOpenDialog({
+                                open: true,
+                                title: `Week ${week.weekNumber} - Day ${day.dayNumber}`,
+                                content: day
+                              })
+                            }}>
+                              <ThemedView key={`${week.id}-${day.id}`} className="rounded-md h-24 px-2 py-0 border border-[#4d4d53]">
+                                <View className="flex-row justify-between">
+                                  <ThemedText className="font-bold">Week {week.weekNumber} - Day {day.dayNumber}</ThemedText>
+                                  {logExists ? (
+                                    <Link
+                                      href={{
+                                        pathname: '/(tabs)/(programs)/viewLog',
+                                        params: { 
+                                          logId: logExists.id,
+                                          programImgUri: program?.s3ImageKey,
+                                          programName: program.name,
+                                        }
+                                      }}
+                                      // asChild
+                                      style={{ color: Colors[colorScheme ?? "light"].tint, textDecorationLine: "underline", alignSelf: "center" }}
+                                    >
+                                      View Log
+                                    </Link>
+                                  ) : null}
                                 </View>
-                              ))}
-                            </ThemedView>
-                          </Pressable>
-                        ))}
+                                {day.blocks[0].exercises.map(exercise => (
+                                  <View key={exercise.id} className="flex-row justify-between mx-2">
+                                    <ThemedText type="small">{exercise.exercise.name}</ThemedText>
+                                    <ThemedText type="small">{exercise.sets} sets x {exercise.time ? `${exercise.time} sec` : `${exercise.reps} reps`}</ThemedText>
+                                  </View>
+                                ))}
+                              </ThemedView>
+                            </Pressable>
+                          )
+                        })}
                       </View>
                     ) : (
                       <View className="flex-1 flex-col gap-2"></View>
@@ -269,9 +353,17 @@ export default function ProgramDetail() {
             <FAB
               icon="play"
               size="medium"
-              label="Start Program"
+              label={userCurrentProgramLogs.length ? 'Continue Program' : 'Start Program'}
               style={{ ...styles.startButton, backgroundColor: Colors[colorScheme ?? 'light'].tint }}
               color="black"
+              onPress={() => {
+                dispatch(startProgramWorkout({
+                  programId: programId as string,
+                  programWeek,
+                  programDay,
+                }))
+                router.navigate(`/programWorkout?programId=${programId}`)
+              }}
             />
           </View>
         </View>

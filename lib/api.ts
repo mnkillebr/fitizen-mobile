@@ -201,7 +201,11 @@ class ApiClient {
     if (!response.ok) {
       // Handle different error status codes
       if (response.status === 401) {
-        throw new Error('Unauthorized');
+        if (response.statusText === "Invalid token") {
+          throw new Error("Session expired");
+        } else {
+          throw new Error("'Unauthorized'");
+        }
       }
       throw new Error('API request failed');
     }
@@ -222,12 +226,30 @@ class ApiClient {
       const endpoint = `/api/mobile/programs/${programId}`;
       return this.fetch(endpoint);
     },
+    programWorkout: async (programId: string) => {
+      const endpoint = `/api/mobile/programs/workouts?id=${programId}`;
+      return this.fetch(endpoint);
+    },
+    programWorkoutLog: async (logId: string) => {
+      const endpoint = `/api/mobile/programs/logs/${logId}`;
+      return this.fetch(endpoint);
+    },
     create: async (programData: any) => {
       const endpoint = `/api/mobile/programs`
       return this.fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(programData),
+      });
+    },
+    saveProgramWorkout: async (workoutData: any) => {
+      const endpoint = `/api/mobile/programs`;
+      return this.fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(workoutData),
       });
     }
   }
@@ -247,7 +269,7 @@ class ApiClient {
       const endpoint = `/api/mobile/workouts/logs/${logId}`;
       return this.fetch(endpoint);
     },
-    saveWorkout: async (workoutData) => {
+    saveWorkout: async (workoutData: any) => {
       const endpoint = `/api/mobile/workouts`;
       return this.fetch(endpoint, {
         method: "POST",

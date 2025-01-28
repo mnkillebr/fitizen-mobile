@@ -14,8 +14,10 @@ interface CountdownTimerProps {
   showPresetTimes?: boolean;
   showCustomInput?: boolean;
   showControls?: boolean;
+  showPlay?: boolean;
   showReset?: boolean;
   showSound?: boolean;
+  align?: "baseline" | "center" | "flex-start" | "flex-end" | "stretch"
   onCountdownEnd?: () => void;
   onStateChange?: (isRunning: boolean) => void;
 };
@@ -34,9 +36,11 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
     label,
     showPresetTimes = true,
     showCustomInput = true,
+    showPlay = true,
     showControls = true,
     showReset = true,
     showSound = false,
+    align,
     onCountdownEnd = () => {},
     onStateChange,
   } = props;
@@ -184,7 +188,7 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { alignItems: align ? align : "center", }]}>
       {label ? (
         <Text style={styles.labelText}>{label}</Text>
       ) : null}
@@ -245,33 +249,33 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
       ) : null}
 
       <View style={styles.buttonContainer}>
+        {showPlay ? (
+          <TouchableOpacity
+            onPress={isRunning ? handlePause : handleStart}
+            // disabled={isRunning}
+            style={[styles.button, styles.playButton, {backgroundColor: Colors[colorScheme ?? 'light'].tint}]}
+            >
+            <MaterialIcons name={isRunning ? "pause" :"play-arrow"} size={20} color="black" />
+          </TouchableOpacity>
+        ) : null}
         {showControls ? (
           <>
-            <TouchableOpacity
-              onPress={handleStart}
-              disabled={isRunning}
-              style={[styles.button, styles.playButton, isRunning && styles.disabled]}
-            >
-              <MaterialIcons name="play-arrow" size={24} color="white" />
-            </TouchableOpacity>
-
             <TouchableOpacity
               onPress={handlePause}
               disabled={!isRunning}
               style={[styles.button, styles.pauseButton, !isRunning && styles.disabled]}
             >
-              <MaterialIcons name="pause" size={24} color="white" />
+              <MaterialIcons name="pause" size={20} color="white" />
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleStop}
               style={[styles.button, styles.stopButton]}
             >
-              <MaterialIcons name="stop" size={24} color="white" />
+              <MaterialIcons name="stop" size={20} color="white" />
             </TouchableOpacity>
           </>
         ) : null}
-
         {showReset ? (
           <TouchableOpacity
             onPress={handleReset}
@@ -279,7 +283,7 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
           >
             <MaterialIcons
               name="refresh"
-              size={24}
+              size={20}
               color="black"
             />
           </TouchableOpacity>
@@ -292,7 +296,7 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
           >
             <MaterialIcons
               name={isSoundEnabled ? 'volume-up' : 'volume-off'}
-              size={24}
+              size={20}
               color="black"
             />
           </TouchableOpacity>
@@ -310,9 +314,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     // backgroundColor: '#f5f5f5',
-    alignItems: 'center',
     paddingTop: 50,
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20,
   },
   labelText: {
     fontSize: 24,
@@ -386,9 +389,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   button: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 3,

@@ -42,7 +42,7 @@ export function WorkoutCompleted({ workoutName, closeDialog }: WorkoutCompletedP
       </View>
       <View className="items-center mt-28">
         <ThemedText className="text-xl font-semibold mb-2">Congrats!</ThemedText>
-        <ThemedText className="">You completed {workoutName}</ThemedText>
+        <ThemedText className="text-center mb-2">You completed {workoutName}</ThemedText>
         <ThemedText className="">Keep it up! 💪</ThemedText>
       </View>
     </View>

@@ -11,8 +11,8 @@ import { Button, Divider } from 'react-native-paper';
 export default function SignInScreen() {
   const colorScheme = useColorScheme()
   const { loading, session, signIn, signInSocial } = useAuth();
-  const [email, setEmail] = useState('');
-  const [isValidEmail, setIsValidEmail] = useState(false);
+  const [email, setEmail] = useState('testuser@email.com');
+  const [isValidEmail, setIsValidEmail] = useState(true);
   const [message, setMessage] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
