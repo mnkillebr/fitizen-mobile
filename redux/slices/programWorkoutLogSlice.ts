@@ -273,7 +273,7 @@ const initialState: ProgramWorkoutLogState = {
 
 export const programWorkoutLogSlice = createSlice({
   name: "programWorkoutLog",
-  initialState: sampleWorkoutState,
+  initialState,
   reducers: {
     startProgramWorkout(state, action: PayloadAction<{
       programId: string;
@@ -363,14 +363,14 @@ export const programWorkoutLogSlice = createSlice({
       state.duration = null;
       state.exerciseLogs = [];
     },
-    setCurrentExercise(state, action: PayloadAction) {
+    setCurrentProgramExercise(state, action: PayloadAction) {
       state.currentExercise = action.payload;
     },
-    saveNote(state, action: PayloadAction<string>) {
+    saveProgramNote(state, action: PayloadAction<string>) {
       state.currentNote = action.payload;
     }
   },
 });
 
-export const { startProgramWorkout, recordProgramSet, finishProgramWorkout, resetProgramWorkoutLog, cancelProgramWorkout, setCurrentExercise, saveNote } = programWorkoutLogSlice.actions;
+export const { startProgramWorkout, recordProgramSet, finishProgramWorkout, resetProgramWorkoutLog, cancelProgramWorkout, setCurrentProgramExercise, saveProgramNote } = programWorkoutLogSlice.actions;
 export default programWorkoutLogSlice.reducer;

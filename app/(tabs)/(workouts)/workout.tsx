@@ -6,7 +6,7 @@ import { ThemedSafeAreaView } from '@/components/ThemeSafeAreaView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { api, apiClient } from '@/lib/api';
-import { resetWorkoutLog, recordSet, cancelWorkout, finishWorkout } from '@/redux/slices/workoutLogSlice';
+import { resetWorkoutLog, recordSet, cancelWorkout, finishWorkout, setCurrentExercise } from '@/redux/slices/workoutLogSlice';
 import { RootState } from '@/redux/store';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Dialog } from '@rneui/themed';
@@ -17,6 +17,8 @@ import { ImageBackground, Keyboard, StyleSheet, Text, TouchableWithoutFeedback, 
 import { Image } from 'expo-image';
 import { FAB, IconButton, TextInput, } from 'react-native-paper';
 import { useDispatch, useSelector } from "react-redux";
+import { useBottomSheet } from '@/providers/bottom-sheet-provider';
+import AnimatedDrawer from '@/components/AnimatedDrawer';
 
 const DialogButton = ({ 
   title = 'Button',
@@ -46,7 +48,10 @@ export default function WorkoutFlowScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showStopwatch, setShowStopwatch] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openDrawer, setOpenDrawer] = useState(false);
   const [countdownRunning, setCountdownRunning] = useState(false);
+  const [isCommentsVisible, setIsCommentsVisible] = useState(false);
+  const { open, setContent } = useBottomSheet();
   const dispatch = useDispatch()
 
   const {
@@ -120,6 +125,10 @@ export default function WorkoutFlowScreen() {
   useEffect(() => {
     if (restMappedDetails.length) {
       preloadImages();
+      if (setCurrentExercise(restMappedDetails[currentIndex].exerciseId)) {
+        console.log("set current")
+        dispatch(setCurrentExercise(restMappedDetails[currentIndex]))
+      }
     }
   }, [currentIndex, restMappedDetails]);
   
@@ -324,6 +333,26 @@ export default function WorkoutFlowScreen() {
             />
           </View>
         )}
+        <View className="absolute top-1/2 right-0 z-10">
+          <IconButton
+            icon="timer"
+            iconColor={openDrawer ? Colors[colorScheme ?? "light"].tint : "#eeeeec"}
+            onPress={() => {
+              // console.log("show timer")
+              setOpenDrawer(!openDrawer)
+            }}
+          />
+          {restMappedDetails[currentIndex].exerciseId ? (
+            <IconButton
+              icon="comment-processing"
+              iconColor="#eeeeec"
+              onPress={() => {
+                // setContent(true)
+                open()
+              }}
+            />
+          ) : null}
+        </View>
       </ThemedView>
       <View className="flex-row w-full px-3 justify-between absolute" style={{ bottom: tabBarHeight ? tabBarHeight + 12 : 32 }}>
         <FAB
@@ -385,7 +414,9 @@ export default function WorkoutFlowScreen() {
                 time: restMappedDetails[currentIndex].time ?? undefined,
               }
               // console.log(currentSetData)
-              dispatch(recordSet(currentSetData))
+              if (restMappedDetails[currentIndex].exerciseId) {
+                dispatch(recordSet(currentSetData))
+              }
               if (restMappedDetails[currentIndex+1]) {
                 setCurrentIndex(currentIndex+1)
                 setCurrentLoad("")
@@ -441,6 +472,28 @@ export default function WorkoutFlowScreen() {
           </View>
         </Dialog.Actions>
       </Dialog>
+      <AnimatedDrawer
+        isOpen={openDrawer}
+        onClose={() => setOpenDrawer(false)}
+        showOverlay={false}
+        drawerWidth={200}
+        position={{ bottom: 200, right: 16 }}
+      >
+        <CountdownTimer
+          // ref={countdownRef}
+          showPresetTimes={false}
+          // autoStart={true}
+          showCustomInput={false}
+          showControls={false}
+          showReset={true}
+          showSound={true}
+          label="Timer"
+          defaultTime={restMappedDetails[currentIndex].time ? restMappedDetails[currentIndex].time : undefined}
+          // onStateChange={handleCountdownStateChange}
+          align='flex-end'
+          // onCountdownEnd={() => setShowStopwatch(true)}
+        />
+      </AnimatedDrawer>
     </ThemedSafeAreaView>
   );
 }

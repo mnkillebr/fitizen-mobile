@@ -4,7 +4,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { api, apiClient } from "@/lib/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, router } from "expo-router";
-import { View, Text, SafeAreaView, ImageBackground, StyleSheet, Dimensions, Pressable, FlatList, SectionList, Image, ActivityIndicator } from "react-native";
+import { View, Text, SafeAreaView, ImageBackground, StyleSheet, Dimensions, Pressable, FlatList, SectionList, Image, ActivityIndicator, RefreshControl } from "react-native";
 import { FAB, IconButton } from "react-native-paper";
 import { Colors } from "@/constants/Colors";
 import { useSharedValue } from "react-native-reanimated";
@@ -307,6 +307,12 @@ export default function WorkoutDetail() {
                       <Text className="font-bold text-[#eeeeec] text-right mb-1">{footer}</Text>
                     ) : null}
                     ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Exercises</Text>}
+                    refreshControl={
+                      <RefreshControl
+                        refreshing={isRefetching}
+                        onRefresh={refetch}
+                      />
+                    }
                   />
                 </TabView.Item>
                 <TabView.Item className="px-2 pt-2 w-full">
@@ -342,6 +348,12 @@ export default function WorkoutDetail() {
                       </View>
                     )}
                     ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No workout logs</Text>}
+                    refreshControl={
+                      <RefreshControl
+                        refreshing={isRefetching}
+                        onRefresh={refetch}
+                      />
+                    }
                   />
                 </TabView.Item>
               </TabView>

@@ -7,11 +7,12 @@ import { Snackbar, TextInput } from 'react-native-paper';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useDispatch, useSelector } from 'react-redux';
-import { saveNote } from '@/redux/slices/programWorkoutLogSlice';
+import { saveProgramNote } from '@/redux/slices/programWorkoutLogSlice';
 import { RootState } from '@/redux/store';
 import { setClearBottomSheet } from '@/redux/slices/uiSlice';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import { ThemedText } from '@/components/ThemedText';
+import { saveNote } from '@/redux/slices/workoutLogSlice';
 
 const bottomSheetRef = createRef<BottomSheet>();
 
@@ -35,28 +36,53 @@ export function BottomSheetProvider({ children }: { children: React.ReactNode })
   const colorScheme = useColorScheme();
   const dispatch = useDispatch();
   const clearBottomSheet = useSelector((state: RootState) => state.ui.clearBottomSheet)
-  const currentExercise = useSelector((state: RootState) => state.programWorkoutLog.currentExercise)
+  const currentProgramExercise = useSelector((state: RootState) => state.programWorkoutLog.currentExercise)
   const programWorkoutExerciseLogs = useSelector((state: RootState) => state.programWorkoutLog.exerciseLogs)
+  const currentExercise = useSelector((state: RootState) => state.workoutLog.currentExercise)
+  const workoutExerciseLogs = useSelector((state: RootState) => state.workoutLog.exerciseLogs)
   
-  console.log("current exercise", currentExercise, "logs", programWorkoutExerciseLogs)
+  // console.log("current exercise", currentExercise, "logs", workoutExerciseLogs)
 
   useEffect(() => {
-    if (currentExercise && programWorkoutExerciseLogs.length) {
+    if (currentProgramExercise && programWorkoutExerciseLogs.length) {
       if (!programWorkoutExerciseLogs.find(log => {
-        return log.programBlockId === currentExercise.programBlockId
-          && log.exerciseId === currentExercise.exerciseId
-          && log.orderInBlock === currentExercise.orderInBlock
+        return log.programBlockId === currentProgramExercise.programBlockId
+          && log.exerciseId === currentProgramExercise.exerciseId
+          && log.orderInBlock === currentProgramExercise.orderInBlock
       })) {
         setText('')
       } else if (programWorkoutExerciseLogs.find(log => {
-        return log.programBlockId === currentExercise.programBlockId
-          && log.exerciseId === currentExercise.exerciseId
-          && log.orderInBlock === currentExercise.orderInBlock
+        return log.programBlockId === currentProgramExercise.programBlockId
+          && log.exerciseId === currentProgramExercise.exerciseId
+          && log.orderInBlock === currentProgramExercise.orderInBlock
       })) {
         const exerciseLog = programWorkoutExerciseLogs.find(log => {
-          return log.programBlockId === currentExercise.programBlockId
+          return log.programBlockId === currentProgramExercise.programBlockId
+            && log.exerciseId === currentProgramExercise.exerciseId
+            && log.orderInBlock === currentProgramExercise.orderInBlock
+        })
+        const logSets = exerciseLog?.sets
+        if (!logSets?.find(set => set.set === currentProgramExercise.currentSet)) {
+          setText('')
+        }
+      }
+    }
+    if (currentExercise && workoutExerciseLogs.length) {
+      if (!workoutExerciseLogs.find(log => {
+        return log.circuitId === currentExercise.circuitId
+          && log.exerciseId === currentExercise.exerciseId
+          && log.orderInRoutine === currentExercise.orderInRoutine
+      })) {
+        setText('')
+      } else if (workoutExerciseLogs.find(log => {
+        return log.circuitId === currentExercise.circuitId
+          && log.exerciseId === currentExercise.exerciseId
+          && log.orderInRoutine === currentExercise.orderInRoutine
+      })) {
+        const exerciseLog = workoutExerciseLogs.find(log => {
+          return log.circuitId === currentExercise.circuitId
             && log.exerciseId === currentExercise.exerciseId
-            && log.orderInBlock === currentExercise.orderInBlock
+            && log.orderInRoutine === currentExercise.orderInRoutine
         })
         const logSets = exerciseLog?.sets
         if (!logSets?.find(set => set.set === currentExercise.currentSet)) {
@@ -64,7 +90,13 @@ export function BottomSheetProvider({ children }: { children: React.ReactNode })
         }
       }
     }
-  }, [currentExercise, programWorkoutExerciseLogs])
+  },
+  [
+    currentProgramExercise,
+    programWorkoutExerciseLogs,
+    currentExercise,
+    workoutExerciseLogs,
+  ])
 
   const renderBackdrop = useCallback(
     (props) => (
@@ -117,7 +149,12 @@ export function BottomSheetProvider({ children }: { children: React.ReactNode })
           <Pressable 
             style={[styles.button, { backgroundColor: Colors[colorScheme ?? "light"].tint }]}
             onPress={() => {
-              dispatch(saveNote(text))
+              if (currentProgramExercise) {
+                dispatch(saveProgramNote(text))
+              }
+              if (currentExercise) {
+                dispatch(saveNote(text))
+              }
               setSnackOpen(true)
               Keyboard.dismiss()
             }}

@@ -26,6 +26,7 @@ type CircuitItemDataType = {
   time?: string;
   load: number;
   orderInRoutine: number;
+  notes?: string;
   set: number;
   unit: string;
 }
@@ -33,6 +34,7 @@ type ItemDataType = {
   actualReps: string;
   exerciseId: string;
   load: number | undefined;
+  notes?: string;
   set: number;
   unit: string;
 }
@@ -212,7 +214,7 @@ export default function ReviewWorkout() {
                               {circuitRound.exercises.map((exercise: CircuitItemDataType, exIdx: number) => (
                                 <View
                                   key={`${item.circuitId}-round-${circuitRound.set}-exercise-${exercise.exerciseId}-${exIdx}`}
-                                  className={`flex-row w-full gap-x-2 py-2 ${(exIdx + 1) < circuitRound.exercises.length ? "border-b-hairline border-white" : ""}`}
+                                  className={`flex-row flex-wrap w-full gap-2 py-2 ${(exIdx + 1) < circuitRound.exercises.length ? "border-b-hairline border-white" : ""}`}
                                 >
                                   <View className="w-[calc(40%)] overflow-hidden">
                                     <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Name</Text>
@@ -230,6 +232,12 @@ export default function ReviewWorkout() {
                                     <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Load</Text>
                                     <Text className="w-fit text-sm dark:text-[#eeeeec]">{exercise.load ? exercise.load : "None"}</Text>
                                   </View>
+                                  {exercise.notes ? (
+                                    <View className="">
+                                      <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Notes</Text>
+                                      <Text className="w-fit text-sm dark:text-[#eeeeec]">{exercise.notes}</Text>
+                                    </View>
+                                  ) : null}
                                 </View>
                               ))}
                             </View>
@@ -256,7 +264,7 @@ export default function ReviewWorkout() {
                         <ThemedView key={`item-${dataItem.exerciseId}`} className="my-0.5 mx-1 p-1 flex-row gap-2 rounded">
                           <View className="flex-row w-full gap-4">
                             <Text className="dark:text-[#eeeeec] font-bold">Set {dataIdx+1}</Text>
-                            <View className="flex-row flex-wrap max-w-full gap-x-4 gap-y-0">
+                            <View className="flex-row flex-wrap max-w-full gap-x-4 gap-y-2">
                               <View className="w-14">
                                 <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Target</Text>
                                 <Text className="text-sm dark:text-[#eeeeec]">{item.target === "reps" ? `${item.targetReps} reps`: item.time}</Text>
@@ -269,6 +277,12 @@ export default function ReviewWorkout() {
                                 <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Load</Text>
                                 <Text className="w-fit text-sm dark:text-[#eeeeec]">{dataItem.load ? dataItem.load : "None"}</Text>
                               </View>
+                              {dataItem.notes ? (
+                                <View className="">
+                                  <Text className="text-sm self-start font-medium dark:text-[#eeeeec]">Notes</Text>
+                                  <Text className="w-fit text-sm dark:text-[#eeeeec]">{dataItem.notes}</Text>
+                                </View>
+                              ) : null}
                             </View>
                           </View>
                         </ThemedView>

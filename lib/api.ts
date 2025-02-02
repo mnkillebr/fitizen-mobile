@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { ImagePickerAsset } from 'expo-image-picker';
 
 const DEV_API_URL = __DEV__
   ? Platform.select({
@@ -129,6 +130,27 @@ export const api = {
         body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error('Failed to create user');
+      return response.json();
+    },
+  },
+  uploads: {
+    uploadToCloudinary: async (payload: { cloudName: string; file: ImagePickerAsset, apiKey: string; timestamp: string; signature: string}) => {
+      const url = `https://api.cloudinary.com/v1_1/${payload.cloudName}/upload`;
+      const formData = new FormData()
+      formData.append("file", {
+        ...payload.file,
+        type: 'image/jpeg',
+        name: "test_upload"
+      });
+      formData.append("api_key", payload.apiKey);
+      formData.append("timestamp", payload.timestamp);
+      formData.append("signature", payload.signature);
+      formData.append("folder", "fitizen");
+      const response = await fetch(url, {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) throw new Error('Failed to upload to cloudinary');
       return response.json();
     },
   }
@@ -298,6 +320,34 @@ class ApiClient {
     exerciseDetail: async (exerciseId: string) => {
       const endpoint = `/api/mobile/exercises/${exerciseId}`;
       return this.fetch(endpoint);
+    },
+  }
+  upload = {
+    generateSignature: async (payload: any) => {
+      const endpoint = `/api/mobile/uploads`;
+      return this.fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+    },
+  }
+  profile = {
+    getUserProfile: async () => {
+      const endpoint = `/api/mobile/profile`;
+      return this.fetch(endpoint);
+    },
+    updateUserProfile: async (payload: any) => {
+      const endpoint = `/api/mobile/users`;
+      return this.fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
     },
   }
 }

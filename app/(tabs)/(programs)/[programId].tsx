@@ -7,7 +7,7 @@ import { api, apiClient } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, router, Link } from "expo-router";
 import { useMemo, useRef, useState } from "react";
-import { Alert, Dimensions, ImageBackground, Pressable, SafeAreaView, StyleSheet, Text, View, } from "react-native";
+import { ActivityIndicator, Alert, Dimensions, ImageBackground, Pressable, SafeAreaView, StyleSheet, Text, View, } from "react-native";
 import { FAB, Icon, IconButton, ProgressBar } from "react-native-paper";
 import { useSharedValue } from "react-native-reanimated";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
@@ -128,7 +128,15 @@ export default function ProgramDetail() {
 			animated: true,
 		});
 	};
-  console.log("program", program, programDay, programWeek, userCurrentProgramLogs)
+  // console.log("program", program, programDay, programWeek, userCurrentProgramLogs)
+
+  if (isLoading) {
+    return (
+      <ThemedSafeAreaView className='flex-1 relative'>
+        <ActivityIndicator />
+      </ThemedSafeAreaView>
+    )
+  }
   
   return (
     <ImageBackground

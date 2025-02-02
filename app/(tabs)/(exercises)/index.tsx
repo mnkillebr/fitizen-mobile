@@ -31,7 +31,7 @@ export default function LibraryScreen() {
   } = useInfiniteExercises(query);
 
   const flatData = data?.pages.flatMap(page => page.exercises) ?? [];
-
+  console.log("exercises data", data)
   return (
     <ThemedSafeAreaView className='flex-1 -mt-4'>
       <ThemedView className='p-4'>

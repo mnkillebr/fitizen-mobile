@@ -20,7 +20,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { setClearBottomSheet, setToggleHideTabs } from '@/redux/slices/uiSlice';
 import { CommentsDrawer } from '@/components/CommentsDrawer';
 import { useBottomSheet } from '@/providers/bottom-sheet-provider';
-import { finishProgramWorkout, recordProgramSet, setCurrentExercise } from '@/redux/slices/programWorkoutLogSlice';
+import { finishProgramWorkout, recordProgramSet, setCurrentProgramExercise } from '@/redux/slices/programWorkoutLogSlice';
 import AnimatedDrawer from '@/components/AnimatedDrawer';
 
 const { height, width } = Dimensions.get("window")
@@ -509,7 +509,7 @@ export default function WorkoutFlowScreen() {
                 setCurrentReps("")
                 setCurrentNotes("")
                 if (allExercises[currentIndex+1].programBlockId) {
-                  dispatch(setCurrentExercise(allExercises[currentIndex+1]))
+                  dispatch(setCurrentProgramExercise(allExercises[currentIndex+1]))
                 }
               }
               else {

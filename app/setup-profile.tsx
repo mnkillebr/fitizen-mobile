@@ -83,7 +83,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 8,
     paddingHorizontal: 8,
-    color: "#fffd"
   },
   inputFocused: {
     borderColor: '#a16207',
