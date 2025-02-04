@@ -22,6 +22,7 @@ import { CommentsDrawer } from '@/components/CommentsDrawer';
 import { useBottomSheet } from '@/providers/bottom-sheet-provider';
 import { finishProgramWorkout, recordProgramSet, setCurrentProgramExercise } from '@/redux/slices/programWorkoutLogSlice';
 import AnimatedDrawer from '@/components/AnimatedDrawer';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { height, width } = Dimensions.get("window")
 
@@ -249,6 +250,10 @@ export default function WorkoutFlowScreen() {
       // <ThemedSafeAreaView className='flex-1 relative'></ThemedSafeAreaView>
       <ThemedSafeAreaView className='flex-1 relative'>
         <ThemedView className='' onTouchStart={Keyboard.dismiss}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.9)', 'transparent']}
+            style={styles.headerBackgroud}
+          />
           <View className='absolute top-0 z-20'>
             <IconButton
               icon="arrow-left"
@@ -591,6 +596,14 @@ export default function WorkoutFlowScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerBackgroud: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 80,
+    zIndex: 1
+  },
   backgroundImage: {
     flex: 1,
     // backgroundSize: "cover",

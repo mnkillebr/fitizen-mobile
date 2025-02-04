@@ -316,7 +316,7 @@ export default function ProgramDetail() {
                                 content: day
                               })
                             }}>
-                              <ThemedView key={`${week.id}-${day.id}`} className="rounded-md h-24 px-2 py-0 border border-[#4d4d53]">
+                              <ThemedView key={`${week.id}-${day.id}-${dayIdx}`} className="rounded-md h-24 px-2 py-0 border border-[#4d4d53]">
                                 <View className="flex-row justify-between">
                                   <ThemedText className="font-bold">Week {week.weekNumber} - Day {day.dayNumber}</ThemedText>
                                   {logExists ? (
@@ -337,7 +337,7 @@ export default function ProgramDetail() {
                                   ) : null}
                                 </View>
                                 {day.blocks[0].exercises.map(exercise => (
-                                  <View key={exercise.id} className="flex-row justify-between mx-2">
+                                  <View key={`${week.id}-${day.id}-${dayIdx}-${exercise.exercise.id}`} className="flex-row justify-between mx-2">
                                     <ThemedText type="small">{exercise.exercise.name}</ThemedText>
                                     <ThemedText type="small">{exercise.sets} sets x {exercise.time ? `${exercise.time} sec` : `${exercise.reps} reps`}</ThemedText>
                                   </View>

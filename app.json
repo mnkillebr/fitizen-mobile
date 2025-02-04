@@ -4,7 +4,7 @@
     "slug": "fitizen-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/fitizen_logo.png",
     "scheme": "mobile.fitizen",
     "platforms": ["ios", "android"],
     "userInterfaceStyle": "automatic",
@@ -14,14 +14,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/fitizen_logo.png",
         "backgroundColor": "#ffffff"
       }
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/fitizen_logo.png"
     },
     "plugins": [
       "expo-router",

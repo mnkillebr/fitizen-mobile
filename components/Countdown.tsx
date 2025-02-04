@@ -186,6 +186,24 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
       setCustomSeconds('');
     }
   };
+  const [timey, setTimey] = useState("");
+
+  const handleChange = (text: string) => {
+    // Allow only numbers and colon, enforcing "MM:SS" format
+    let formattedText = text.replace(/[^0-9:]/g, "");
+
+    // Automatically insert colon if needed
+    if (formattedText.length === 2 && !formattedText.includes(":")) {
+      formattedText += ":";
+    }
+
+    // Enforce max length of 5 (MM:SS)
+    if (formattedText.length > 5) {
+      return;
+    }
+
+    setTimey(formattedText);
+  };
 
   return (
     <View style={[styles.container, { alignItems: align ? align : "center", }]}>
@@ -204,6 +222,19 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
       >
         {formatTime(time)}
       </Animated.Text>
+      {/* <TextInput
+        style={{
+          color: "white",
+          fontSize: 24,
+          textAlign: "center",
+        }}
+        value={timey}
+        onChangeText={handleChange}
+        keyboardType="numeric"
+        placeholder="MM:SS"
+        placeholderTextColor="rgba(255, 255, 255, 0.5)"
+        maxLength={5}
+      /> */}
 
       {showPresetTimes ? (
         <ScrollView

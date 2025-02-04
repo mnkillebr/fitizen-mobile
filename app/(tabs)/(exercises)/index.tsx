@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, Text, View, ImageBackground, Pressable, ScrollView } from 'react-native';
+import { StyleSheet, Platform, Text, View, ImageBackground, Pressable, ScrollView, TouchableOpacity } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -8,11 +8,25 @@ import { ThemedSafeAreaView } from '@/components/ThemeSafeAreaView';
 import { useState } from 'react';
 import { useInfiniteExercises } from '@/hooks/useInfiniteQuery';
 import { InfiniteList } from '@/components/InfiniteList';
-import { Link } from 'expo-router';
-import { Skeleton } from '@rneui/themed';
+import { Link, router } from 'expo-router';
+import { Avatar, Skeleton } from '@rneui/themed';
+import { Button, IconButton } from 'react-native-paper';
+import { Colors } from '@/constants/Colors';
+import { Image } from 'expo-image';
+import { useColorScheme } from '@/hooks/useColorScheme.web';
+import AnimatedDrawer from '@/components/AnimatedDrawer';
+import { Dimensions } from 'react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useAuth } from '@/providers/auth-provider';
+
+const { height, width } = Dimensions.get("window");
 
 export default function LibraryScreen() {
+  const { signOut, session } = useAuth();
+  const colorScheme = useColorScheme();
+  const tabBarHeight = useBottomTabBarHeight();
   const [query, setQuery] = useState('');
+  const [openDrawer, setOpenDrawer] = useState(false);
   
   const {
     status,
@@ -31,10 +45,48 @@ export default function LibraryScreen() {
   } = useInfiniteExercises(query);
 
   const flatData = data?.pages.flatMap(page => page.exercises) ?? [];
-  console.log("exercises data", data)
+  // console.log("exercises data", data)
   return (
     <ThemedSafeAreaView className='flex-1 -mt-4'>
-      <ThemedView className='p-4'>
+      <ThemedView className='p-4 h-full'>
+        <View className='flex-row justify-between items-center h-8'>
+          <View className='w-8'>
+            <IconButton
+              icon="menu"
+              size={20}
+              iconColor='gray'
+              onPress={() => setOpenDrawer(!openDrawer)}
+            />
+          </View>
+          <Text className='text-[#eeeeec] font-bold text-lg'>Fitizen</Text>
+          {session?.user?.profilePhotoUrl ? (
+
+            <TouchableOpacity
+              onPress={() => router.navigate("/profile")}
+              className='w-8 mr-2'
+            >
+              <Image
+                key={session.user.profilePhotoUrl}
+                source={{ uri: session.user.profilePhotoUrl }}
+                style={{ width: 28, height: 28, borderRadius: 14 }}
+                contentFit="cover"
+                // transition={100}
+              />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => router.navigate("/profile")}
+              className='w-8 mr-2'
+            >
+              <Avatar
+                size={28}
+                rounded
+                title={`${session.user.firstName[0]}${session.user.lastName[0]}`}
+                containerStyle={{ backgroundColor: Colors[colorScheme ?? "light"].backgroundMuted }}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
         {isLoading ? (
           <ScrollView showsVerticalScrollIndicator={false}>
             {[...Array(3)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={196} className='my-2 rounded-lg' skeletonStyle={{ backgroundColor: "gray" }} />)}
@@ -83,6 +135,30 @@ export default function LibraryScreen() {
           // ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Exercises</Text>}
         />}
       </ThemedView>
+      <AnimatedDrawer
+        isOpen={openDrawer}
+        onClose={() => setOpenDrawer(false)}
+        showOverlay={true}
+        mode="sidebar"
+        side="left"
+        drawerWidth={width * 0.4}
+      >
+        <ThemedSafeAreaView className='h-full border-r flex-col-reverse' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+          <Button
+            onPress={signOut}
+            style={{
+              backgroundColor: "#ffd700",
+              borderRadius: 8,
+              marginHorizontal: 8,
+              // position: "relative",
+              bottom: -tabBarHeight + 20
+            }}
+            textColor='black'
+          >
+            Sign Out
+          </Button>
+        </ThemedSafeAreaView>
+      </AnimatedDrawer>
     </ThemedSafeAreaView>
   );
 }

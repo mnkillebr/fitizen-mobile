@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, Text, View, ImageBackground, Pressable, FlatList, RefreshControl, ScrollView } from 'react-native';
+import { StyleSheet, Platform, Text, View, ImageBackground, Pressable, FlatList, RefreshControl, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -9,13 +9,26 @@ import { SearchBar } from '@/components/SearchBar';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, apiClient } from '@/lib/api';
-import { Link } from 'expo-router';
-import { Skeleton } from '@rneui/themed';
+import { Link, router } from 'expo-router';
+import { Avatar, Skeleton } from '@rneui/themed';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
+import { Button, IconButton } from 'react-native-paper';
+import { Image } from 'expo-image';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { useAuth } from '@/providers/auth-provider';
+import AnimatedDrawer from '@/components/AnimatedDrawer';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+
+const { height, width } = Dimensions.get("window");
 
 export default function WorkoutsScreen() {
+  const { signOut, session } = useAuth();
+  const colorScheme = useColorScheme();
+  const tabBarHeight = useBottomTabBarHeight();
   const [searchQuery, setSearchQuery] = useState('');
+  const [openDrawer, setOpenDrawer] = useState(false);
   const {
     data: workouts,
     isLoading,
@@ -32,6 +45,44 @@ export default function WorkoutsScreen() {
   return (
     <ThemedSafeAreaView className='flex-1 -mt-4'>
       <ThemedView className='p-4 h-full'>
+        <View className='flex-row justify-between items-center h-8'>
+          <View className='w-8'>
+            <IconButton
+              icon="menu"
+              size={20}
+              iconColor='gray'
+              onPress={() => setOpenDrawer(!openDrawer)}
+            />
+          </View>
+          <Text className='text-[#eeeeec] font-bold text-lg'>Fitizen</Text>
+          {session?.user?.profilePhotoUrl ? (
+
+            <TouchableOpacity
+              onPress={() => router.navigate("/profile")}
+              className='w-8 mr-2'
+            >
+              <Image
+                key={session.user.profilePhotoUrl}
+                source={{ uri: session.user.profilePhotoUrl }}
+                style={{ width: 28, height: 28, borderRadius: 14 }}
+                contentFit="cover"
+                // transition={100}
+              />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => router.navigate("/profile")}
+              className='w-8 mr-2'
+            >
+              <Avatar
+                size={28}
+                rounded
+                title={`${session.user.firstName[0]}${session.user.lastName[0]}`}
+                containerStyle={{ backgroundColor: Colors[colorScheme ?? "light"].backgroundMuted }}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
         <SearchBar
           placeholder='Search Workouts ...'
           onSearch={setSearchQuery}
@@ -86,6 +137,30 @@ export default function WorkoutsScreen() {
           ListEmptyComponent={<Text className="text-center text-sm/6 mt-2 text-[#eeeeec]">No Workouts</Text>}
         />}
       </ThemedView>
+      <AnimatedDrawer
+        isOpen={openDrawer}
+        onClose={() => setOpenDrawer(false)}
+        showOverlay={true}
+        mode="sidebar"
+        side="left"
+        drawerWidth={width * 0.4}
+      >
+        <ThemedSafeAreaView className='h-full border-r flex-col-reverse' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+          <Button
+            onPress={signOut}
+            style={{
+              backgroundColor: "#ffd700",
+              borderRadius: 8,
+              marginHorizontal: 8,
+              // position: "relative",
+              bottom: -tabBarHeight + 20
+            }}
+            textColor='black'
+          >
+            Sign Out
+          </Button>
+        </ThemedSafeAreaView>
+      </AnimatedDrawer>
     </ThemedSafeAreaView>
   );
 }

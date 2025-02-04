@@ -19,6 +19,7 @@ import { FAB, IconButton, TextInput, } from 'react-native-paper';
 import { useDispatch, useSelector } from "react-redux";
 import { useBottomSheet } from '@/providers/bottom-sheet-provider';
 import AnimatedDrawer from '@/components/AnimatedDrawer';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const DialogButton = ({ 
   title = 'Button',
@@ -126,7 +127,7 @@ export default function WorkoutFlowScreen() {
     if (restMappedDetails.length) {
       preloadImages();
       if (setCurrentExercise(restMappedDetails[currentIndex].exerciseId)) {
-        console.log("set current")
+        // console.log("set current")
         dispatch(setCurrentExercise(restMappedDetails[currentIndex]))
       }
     }
@@ -177,6 +178,10 @@ export default function WorkoutFlowScreen() {
     // </ImageBackground>
     <ThemedSafeAreaView className='flex-1 relative'>
       <ThemedView className='' onTouchStart={Keyboard.dismiss}>
+        <LinearGradient
+          colors={['rgba(0,0,0,0.9)', 'transparent']}
+          style={styles.headerBackgroud}
+        />
         <View className='absolute top-0 z-20'>
           <IconButton
             icon="arrow-left"
@@ -340,6 +345,7 @@ export default function WorkoutFlowScreen() {
             onPress={() => {
               // console.log("show timer")
               setOpenDrawer(!openDrawer)
+              countdownRef.current?.reset(0)
             }}
           />
           {restMappedDetails[currentIndex].exerciseId ? (
@@ -488,7 +494,7 @@ export default function WorkoutFlowScreen() {
           showReset={true}
           showSound={true}
           label="Timer"
-          defaultTime={restMappedDetails[currentIndex].time ? restMappedDetails[currentIndex].time : undefined}
+          defaultTime={0}
           // onStateChange={handleCountdownStateChange}
           align='flex-end'
           // onCountdownEnd={() => setShowStopwatch(true)}
@@ -499,6 +505,14 @@ export default function WorkoutFlowScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerBackgroud: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 80,
+    zIndex: 1
+  },
   backgroundImage: {
     flex: 1,
     // backgroundSize: "cover",

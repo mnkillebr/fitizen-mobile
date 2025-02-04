@@ -13,13 +13,14 @@ import { useState } from 'react';
 import { router, Link } from 'expo-router';
 import { Avatar, Skeleton } from '@rneui/themed';
 import { useAuth } from '@/providers/auth-provider';
-import { Button, IconButton } from 'react-native-paper';
+import { Button, Icon, IconButton } from 'react-native-paper';
 import { Colors } from '@/constants/Colors';
-import { Image } from 'expo-image';
+import { Image, ImageBackground } from 'expo-image';
 import { useColorScheme } from '@/hooks/useColorScheme.web';
 import AnimatedDrawer from '@/components/AnimatedDrawer';
 import { Dimensions } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import HealthRings from '@/components/HealthRings';
 
 const { height, width } = Dimensions.get("window");
 
@@ -128,48 +129,48 @@ export default function ProgramsScreen() {
             </TouchableOpacity>
           )}
         </View>
-        {/* <ThemedText className='font-bold text-center'>Programs</ThemedText> */}
-        <SearchBar
-          placeholder='Search Programs ...'
-          onSearch={setSearchQuery}
-        />
-        {isLoading ? (
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {[...Array(3)].map((item, index) => <Skeleton key={`skeleton-${index}`} height={196} className='my-2 rounded-lg' skeletonStyle={{ backgroundColor: "gray" }} />)}
-          </ScrollView>
-        ) : (
-          <FlatList
-            data={programs ? [...programs, ...placeholderPrograms.filter((p => p.name.toLowerCase().includes(searchQuery)))] : placeholderPrograms.filter((p => p.name.toLowerCase().includes(searchQuery)))}
-            renderItem={({item}) => (
-              <Link
-                href={{
-                  pathname: '/(tabs)/(programs)/[programId]',
-                  params: { programId: item.id }
-                }}
-                disabled={!!item.opacity}
-                asChild
-              >
-                <Pressable
-                  style={({ pressed }) => [
-                    { opacity: pressed ? 0.7 : 1 },
-                  ]}
-                >
-                  <ProgramCard {...item} />
-                </Pressable>
-              </Link>
-            )}
-            keyExtractor={item => item.id}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefetching}
-                onRefresh={refetch}
-              />
-            }
-            keyboardDismissMode="on-drag"
-            keyboardShouldPersistTaps="handled"
-          />
-        )}
+        <View className='mt-4 flex-row gap-4'>
+          <View className='flex-1 items-center'>
+            <HealthRings
+              rings={[
+                { value: 0.75, color: '#ffd700' },  // Outer ring at 75%
+                { value: 0.45, color: '#00FF00' },  // Middle ring at 45%
+                // { value: 0.80, color: '#0000FF' },  // Inner ring at 90%
+              ]}
+              size={150}
+              strokeWidth={10}
+            />
+          </View>
+          <View className='flex-1 border items-center rounded-lg justify-center' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+            <Icon source="watch-variant" size={30} color={Colors[colorScheme ?? "light"].border} />
+            <Text className='text-[#eeeeec] font-semibold'>Connect</Text>
+            <Text className='text-[#eeeeec] font-semibold'>Wearable</Text>
+          </View>
+        </View>
+        <ThemedText className='mt-4' type="subtitle">Get a customized plan</ThemedText>
+        <View className='h-52'>
+          <ImageBackground
+            source={{ uri: "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/oclpzcjzbmzou4yczv5j" }}
+            style={styles.backgroundImage}
+            imageStyle={{ borderRadius: 8 }}
+          >
+            <Text className='text-[#eeeeec] text-lg font-semibold absolute right-4 bottom-4' style={styles.text}>Take Fitness Assessment</Text>
+          </ImageBackground>
+        </View>
+        <ThemedText className='mt-4' type="subtitle">Badges</ThemedText>
+        <ScrollView horizontal className=''>
+          <View className='flex-row gap-4'>
+            {[...Array(5)].map((item, itemIdx) => {
+              return (
+                <View key={itemIdx} className='border items-center rounded-lg flex-1 justify-center size-40' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+                  <Icon source="seal" size={30} color={Colors[colorScheme ?? "light"].border} />
+                  <Text className='text-[#eeeeec] font-semibold'>Badge</Text>
+                  <Text className='text-[#eeeeec] font-semibold'>#{itemIdx+1}</Text>
+                </View>
+              )
+            })}
+          </View>
+        </ScrollView>
       </ThemedView>
       <AnimatedDrawer
         isOpen={openDrawer}
@@ -198,3 +199,21 @@ export default function ProgramsScreen() {
     </ThemedSafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    borderRadius: 12,
+  },
+  text: {
+    textShadowColor: '#000',
+    textShadowOffset: {
+      width: 0.75,
+      height: 0.75,
+    },
+    textShadowRadius: 2,
+  }
+});

@@ -169,7 +169,6 @@ export default function FitnessSettings({ fitnessProfile, isLoading, isRefetchin
           }
         } else if (key.includes("medical")) {
           const historyKey = key.split("_")[1].replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-          console.log("history key", historyKey, value)
           resultObj[historyKey] = {
             ...resultObj[historyKey],
             answer: value,
