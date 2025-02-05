@@ -9,7 +9,7 @@ const DEV_API_URL = __DEV__
       android: 'http://10.0.2.2:3000',
       default: 'http://localhost:3000'
     })
-  : 'https://fitizen.fly.dev';
+  : Constants.expoConfig?.extra?.publicUrl;
 
 export const api = {
   programs: {

@@ -21,6 +21,7 @@ import AnimatedDrawer from '@/components/AnimatedDrawer';
 import { Dimensions } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import HealthRings from '@/components/HealthRings';
+const fitizenLogo = require('@/assets/images/fitizen_logo.png')
 
 const { height, width } = Dimensions.get("window");
 
@@ -129,46 +130,75 @@ export default function ProgramsScreen() {
             </TouchableOpacity>
           )}
         </View>
-        <View className='mt-4 flex-row gap-4'>
-          <View className='flex-1 items-center'>
-            <HealthRings
-              rings={[
-                { value: 0.75, color: '#ffd700' },  // Outer ring at 75%
-                { value: 0.45, color: '#00FF00' },  // Middle ring at 45%
-                // { value: 0.80, color: '#0000FF' },  // Inner ring at 90%
-              ]}
-              size={150}
-              strokeWidth={10}
-            />
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View className='mt-4 flex-row gap-4'>
+            <View className='flex-1 items-center'>
+              <HealthRings
+                rings={[
+                  { value: 0.75, color: '#ffd700' },  // Outer ring at 75%
+                  { value: 0.45, color: '#00FF00' },  // Middle ring at 45%
+                  // { value: 0.80, color: '#0000FF' },  // Inner ring at 90%
+                ]}
+                size={150}
+                strokeWidth={10}
+                centerImage={fitizenLogo}
+                imageSize={60}
+              />
+            </View>
+            <View className='flex-1 border items-center rounded-lg justify-center' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+              <Icon source="watch-variant" size={30} color={Colors[colorScheme ?? "light"].border} />
+              {/* <Image source={require('@/assets/images/icon.png')} style={{ height: 50, width: 50 }} /> */}
+              <Text className='text-[#eeeeec] font-semibold'>Connect</Text>
+              <Text className='text-[#eeeeec] font-semibold'>Wearable</Text>
+            </View>
           </View>
-          <View className='flex-1 border items-center rounded-lg justify-center' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
-            <Icon source="watch-variant" size={30} color={Colors[colorScheme ?? "light"].border} />
-            <Text className='text-[#eeeeec] font-semibold'>Connect</Text>
-            <Text className='text-[#eeeeec] font-semibold'>Wearable</Text>
+          <View>
+            <ThemedText className='mt-4' type="subtitle">Get a customized plan</ThemedText>
+            <View className='h-52'>
+              <ImageBackground
+                source={{ uri: "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/oclpzcjzbmzou4yczv5j" }}
+                style={styles.backgroundImage}
+                imageStyle={{ borderRadius: 8 }}
+              >
+                <Text className='text-[#eeeeec] text-lg font-semibold absolute right-4 bottom-4' style={styles.text}>Take Movement Screen</Text>
+              </ImageBackground>
+            </View>
           </View>
-        </View>
-        <ThemedText className='mt-4' type="subtitle">Get a customized plan</ThemedText>
-        <View className='h-52'>
-          <ImageBackground
-            source={{ uri: "https://res.cloudinary.com/dqrk3drua/image/upload/f_auto,q_auto/v1/fitizen/oclpzcjzbmzou4yczv5j" }}
-            style={styles.backgroundImage}
-            imageStyle={{ borderRadius: 8 }}
-          >
-            <Text className='text-[#eeeeec] text-lg font-semibold absolute right-4 bottom-4' style={styles.text}>Take Fitness Assessment</Text>
-          </ImageBackground>
-        </View>
-        <ThemedText className='mt-4' type="subtitle">Badges</ThemedText>
-        <ScrollView horizontal className=''>
-          <View className='flex-row gap-4'>
-            {[...Array(5)].map((item, itemIdx) => {
-              return (
-                <View key={itemIdx} className='border items-center rounded-lg flex-1 justify-center size-40' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
-                  <Icon source="seal" size={30} color={Colors[colorScheme ?? "light"].border} />
-                  <Text className='text-[#eeeeec] font-semibold'>Badge</Text>
-                  <Text className='text-[#eeeeec] font-semibold'>#{itemIdx+1}</Text>
-                </View>
-              )
-            })}
+          <View>
+            <ThemedText className='mt-4' type="subtitle">Workout Categories</ThemedText>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View className='flex-row gap-4'>
+                {[...Array(4)].map((item, itemIdx) => {
+                  return (
+                    <View key={itemIdx} className='border items-center rounded-lg flex-1 justify-center size-32' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+                      <Icon
+                        source={itemIdx === 0 ? "weight-lifter" : itemIdx === 1 ? "run-fast" : itemIdx === 2 ? "meditation" : "kabaddi"}
+                        size={30}
+                        color={Colors[colorScheme ?? "light"].border}
+                      />
+                      <Text className='text-[#eeeeec] font-semibold'>Category</Text>
+                      <Text className='text-[#eeeeec] font-semibold'>#{itemIdx+1}</Text>
+                    </View>
+                  )
+                })}
+              </View>
+            </ScrollView>
+          </View>
+          <View style={{ paddingBottom: 64 }}>
+            <ThemedText className='mt-4' type="subtitle">Badges</ThemedText>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View className='flex-row gap-4'>
+                {[...Array(5)].map((item, itemIdx) => {
+                  return (
+                    <View key={itemIdx} className='border items-center rounded-lg flex-1 justify-center size-40' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+                      <Icon source="seal" size={30} color={Colors[colorScheme ?? "light"].border} />
+                      <Text className='text-[#eeeeec] font-semibold'>Badge</Text>
+                      <Text className='text-[#eeeeec] font-semibold'>#{itemIdx+1}</Text>
+                    </View>
+                  )
+                })}
+              </View>
+            </ScrollView>
           </View>
         </ScrollView>
       </ThemedView>
@@ -180,7 +210,13 @@ export default function ProgramsScreen() {
         side="left"
         drawerWidth={width * 0.4}
       >
-        <ThemedSafeAreaView className='h-full border-r flex-col-reverse' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+        <ThemedSafeAreaView className='h-full border-r justify-between' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+          <IconButton
+            icon="close"
+            iconColor={Colors[colorScheme ?? "light"].border}
+            style={{ alignSelf: "flex-end" }}
+            onPress={() => setOpenDrawer(false)}
+          />
           <Button
             onPress={signOut}
             style={{
@@ -188,7 +224,7 @@ export default function ProgramsScreen() {
               borderRadius: 8,
               marginHorizontal: 8,
               // position: "relative",
-              bottom: -tabBarHeight + 20
+              bottom: tabBarHeight - 20
             }}
             textColor='black'
           >

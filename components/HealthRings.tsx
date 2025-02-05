@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Animated, Image, StyleSheet } from 'react-native';
+import { View, Animated, StyleSheet } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
+import { Image } from 'expo-image';
 
 // Type definitions
 interface Ring {
@@ -113,9 +114,9 @@ const HealthRings: React.FC<HealthRingsProps> = ({
           }
         ]}>
           <Image
-            source={{ uri: centerImage }}
+            source={centerImage}
             style={styles.centerImage}
-            resizeMode="cover"
+            contentFit="cover"
           />
         </View>
       )}
@@ -133,7 +134,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     borderRadius: 1000, // Large value to ensure circle
     overflow: 'hidden',
-    backgroundColor: '#fff',
+    // backgroundColor: '#fff',
   },
   centerImage: {
     width: '100%',
