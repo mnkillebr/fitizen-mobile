@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 interface ExerciseLogSet {
   set: string;
   actualReps?: string;
-  load?: number;
+  load?: string;
   unit: "bodyweight" | "kilogram" | "pound";
   notes?: string;
 }
@@ -26,6 +26,8 @@ interface WorkoutLogState {
   workoutId: string | null;
   currentExercise: any;
   currentNote?: string;
+  currentLoad?: string;
+  currentReps?: string;
 }
 
 const sampleWorkoutState: WorkoutLogState = {
@@ -110,19 +112,19 @@ const sampleWorkoutState: WorkoutLogState = {
         {
           set: "1",
           actualReps: '12',
-          load: 44,
+          load: '44',
           unit: 'pound'
         },
         {
           set: "2",
           actualReps: '12',
-          load: 44,
+          load: '44',
           unit: 'pound'
         },
         {
           set: "3",
           actualReps: '12',
-          load: 44,
+          load: '44',
           unit: 'pound'
         }
       ]
@@ -139,19 +141,19 @@ const sampleWorkoutState: WorkoutLogState = {
         {
           set: "1",
           actualReps: '8',
-          load: 35,
+          load: '35',
           unit: 'pound'
         },
         {
           set: "2",
           actualReps: '8',
-          load: 35,
+          load: '35',
           unit: 'pound'
         },
         {
           set: "3",
           actualReps: '8',
-          load: 35,
+          load: '35',
           unit: 'pound'
         }
       ]
@@ -168,19 +170,19 @@ const sampleWorkoutState: WorkoutLogState = {
         {
           set: "1",
           actualReps: '12',
-          load: 20,
+          load: '20',
           unit: 'pound'
         },
         {
           set: "2",
           actualReps: '12',
-          load: 20,
+          load: '20',
           unit: 'pound'
         },
         {
           set: "3",
           actualReps: '12',
-          load: 20,
+          load: '20',
           unit: 'pound'
         }
       ]
@@ -197,25 +199,25 @@ const sampleWorkoutState: WorkoutLogState = {
         {
           set: "1",
           actualReps: '8',
-          load: 15,
+          load: '15',
           unit: 'pound'
         },
         {
           set: "2",
           actualReps: '8',
-          load: 15,
+          load: '15',
           unit: 'pound'
         },
         {
           set: "3",
           actualReps: '10',
-          load: 15,
+          load: '15',
           unit: 'pound'
         },
         {
           set: "4",
           actualReps: '10',
-          load: 14,
+          load: '14',
           unit: 'pound'
         }
       ]
@@ -271,7 +273,7 @@ const sampleWorkoutState2: WorkoutLogState = {
       time: '3',
       sets: [
         {
-          set: 1,
+          set: '1',
           unit: 'pound',
           notes: 'Adductor'
         }
@@ -288,7 +290,7 @@ const sampleWorkoutState2: WorkoutLogState = {
       time: '3',
       sets: [
         {
-          set: 1,
+          set: '1',
           actualReps: '',
           unit: 'pound',
           notes: 'Lower'
@@ -306,7 +308,7 @@ const sampleWorkoutState2: WorkoutLogState = {
       time: '3',
       sets: [
         {
-          set: 1,
+          set: '1',
           actualReps: '',
           unit: 'pound',
           notes: 'V stance'
@@ -324,7 +326,7 @@ const sampleWorkoutState2: WorkoutLogState = {
       time: '3',
       sets: [
         {
-          set: 1,
+          set: '1',
           actualReps: '',
           unit: 'pound',
           notes: 'Sldl'
@@ -341,23 +343,23 @@ const sampleWorkoutState2: WorkoutLogState = {
       time: '30 sec',
       sets: [
         {
-          set: 1,
+          set: '1',
           actualReps: '12',
-          load: 45,
+          load: '45',
           unit: 'pound',
           notes: 'Split 1'
         },
         {
-          set: 2,
+          set: '2',
           actualReps: '12',
-          load: 45,
+          load: '45',
           unit: 'pound',
           notes: 'Split 2'
         },
         {
-          set: 3,
+          set: '3',
           actualReps: '12',
-          load: 45,
+          load: '45',
           unit: 'pound',
           notes: 'Split 3'
         }
@@ -373,23 +375,23 @@ const sampleWorkoutState2: WorkoutLogState = {
       targetReps: '8',
       sets: [
         {
-          set: 1,
+          set: '1',
           actualReps: '8',
-          load: 35,
+          load: '35',
           unit: 'pound',
           notes: 'Ohp 1'
         },
         {
-          set: 2,
+          set: '2',
           actualReps: '8',
-          load: 35,
+          load: '35',
           unit: 'pound',
           notes: 'Ohp 2'
         },
         {
-          set: 3,
+          set: '3',
           actualReps: '8',
-          load: 35,
+          load: '35',
           unit: 'pound',
           notes: 'Ohp 3'
         }
@@ -405,23 +407,23 @@ const sampleWorkoutState2: WorkoutLogState = {
       targetReps: '12',
       sets: [
         {
-          set: 1,
+          set: '1',
           actualReps: '12',
-          load: 20,
+          load: '20',
           unit: 'pound',
           notes: 'Pall of 1'
         },
         {
-          set: 2,
+          set: '2',
           actualReps: '12',
-          load: 20,
+          load: '20',
           unit: 'pound',
           notes: 'Pall 2'
         },
         {
-          set: 3,
+          set: '3',
           actualReps: '12',
-          load: 20,
+          load: '20',
           unit: 'pound',
           notes: 'Pall 3'
         }
@@ -437,30 +439,30 @@ const sampleWorkoutState2: WorkoutLogState = {
       targetReps: '8',
       sets: [
         {
-          set: 1,
+          set: '1',
           actualReps: '8',
-          load: 15,
+          load: '15',
           unit: 'pound',
           notes: 'Side 1'
         },
         {
-          set: 2,
+          set: '2',
           actualReps: '8',
-          load: 15,
+          load: '15',
           unit: 'pound',
           notes: 'Side l'
         },
         {
-          set: 3,
+          set: '3',
           actualReps: '10',
-          load: 15,
+          load: '15',
           unit: 'pound',
           notes: 'Side lunge 3'
         },
         {
-          set: 4,
+          set: '4',
           actualReps: '12',
-          load: 15,
+          load: '15',
           unit: 'pound',
           notes: 'Lunge 4'
         }
@@ -476,25 +478,25 @@ const sampleWorkoutState2: WorkoutLogState = {
       targetReps: '10',
       sets: [
         {
-          set: 1,
+          set: '1',
           actualReps: '10',
           unit: 'pound',
           notes: 'Sis 1'
         },
         {
-          set: 2,
+          set: '2',
           actualReps: '10',
           unit: 'pound',
           notes: 'Sis 2'
         },
         {
-          set: 3,
+          set: '3',
           actualReps: '12',
           unit: 'pound',
           notes: 'Susspnein'
         },
         {
-          set: 4,
+          set: '4',
           actualReps: '12',
           unit: 'pound',
           notes: 'Sis row'
@@ -631,6 +633,8 @@ const initialState: WorkoutLogState = {
   workoutId: null,
   currentExercise: undefined,
   currentNote: undefined,
+  currentLoad: undefined,
+  currentReps: undefined,
 };
 
 export const workoutLogSlice = createSlice({
@@ -666,6 +670,8 @@ export const workoutLogSlice = createSlice({
               ...log,
               sets: [...log.sets, {
                 ...set,
+                actualReps: state.currentReps,
+                load: state.currentLoad,
                 notes: state.currentNote,
               }]
             }
@@ -674,6 +680,8 @@ export const workoutLogSlice = createSlice({
               ...log,
               sets: [...log.sets, {
                 ...set,
+                actualReps: state.currentReps,
+                load: state.currentLoad,
                 notes: state.currentNote,
               }]
             }
@@ -695,12 +703,17 @@ export const workoutLogSlice = createSlice({
             time,
             sets: [{
               ...set,
+              actualReps: state.currentReps,
+              load: state.currentLoad,
               notes: state.currentNote,
             }]
           }
         ]
       }
       state.exerciseLogs = updatedExerciseLogs;
+      state.currentNote = undefined;
+      state.currentLoad = undefined;
+      state.currentReps = undefined;
     },
     finishWorkout(state, action: PayloadAction<string>) {
       state.duration = action.payload;
@@ -713,8 +726,15 @@ export const workoutLogSlice = createSlice({
     setCurrentExercise(state, action: PayloadAction) {
       state.currentExercise = action.payload;
     },
-    saveNote(state, action: PayloadAction<string>) {
-      state.currentNote = action.payload;
+    saveSet(state, action: PayloadAction<{
+      notes?: string;
+      load?: string;
+      reps?: string;
+    }>) {
+      const { notes, load, reps } = action.payload;
+      state.currentNote = notes;
+      state.currentLoad = load;
+      state.currentReps = reps;
     },
     cancelWorkout(state) {
       state.workoutId = null;
@@ -724,5 +744,5 @@ export const workoutLogSlice = createSlice({
   },
 });
 
-export const { startWorkout, recordSet, finishWorkout, resetWorkoutLog, setCurrentExercise, saveNote, cancelWorkout } = workoutLogSlice.actions;
+export const { startWorkout, recordSet, finishWorkout, resetWorkoutLog, setCurrentExercise, saveSet, cancelWorkout } = workoutLogSlice.actions;
 export default workoutLogSlice.reducer;

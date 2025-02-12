@@ -50,6 +50,8 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
   const [customMinutes, setCustomMinutes] = useState('');
   const [customSeconds, setCustomSeconds] = useState('');
   const [isSoundEnabled, setIsSoundEnabled] = useState(false);
+  const [showCustom, setShowCustom] = useState(defaultTime === 0);
+  const [customTime, setCustomTime] = useState("");
   const soundRef = useRef<Audio.Sound | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -149,6 +151,23 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
   };
 
   const handleStart = () => {
+    if (customTime) {
+      if (customTime.length === 5) {
+        const customMinutes = parseInt(customTime.split(":")[0]) || 0
+        const customSeconds = parseInt(customTime.split(":")[1]) || 0
+        const totalSeconds = customMinutes * 60 + customSeconds;
+        if (totalSeconds > 0) {
+          setTime(totalSeconds);
+        }
+      } else if (customTime.length <= 2) {
+        const customSeconds = parseInt(customTime)
+        if (customSeconds > 0) {
+          setTime(customSeconds);
+        }
+      }
+      setShowCustom(false);
+      setIsRunning(true);
+    }
     if (time > 0) {
       setIsRunning(true);
     }
@@ -165,7 +184,23 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
 
   const handleReset = () => {
     setIsRunning(true);
-    setTime(defaultTime);
+    if (customTime) {
+      if (customTime.length === 5) {
+        const customMinutes = parseInt(customTime.split(":")[0]) || 0
+        const customSeconds = parseInt(customTime.split(":")[1]) || 0
+        const totalSeconds = customMinutes * 60 + customSeconds;
+        if (totalSeconds > 0) {
+          setTime(totalSeconds);
+        }
+      } else if (customTime.length <= 2) {
+        const customSeconds = parseInt(customTime)
+        if (customSeconds > 0) {
+          setTime(customSeconds);
+        }
+      }
+    } else {
+      setTime(defaultTime);
+    }
     setCustomMinutes('');
     setCustomSeconds('');
   };
@@ -186,23 +221,28 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
       setCustomSeconds('');
     }
   };
-  const [timey, setTimey] = useState("");
 
   const handleChange = (text: string) => {
-    // Allow only numbers and colon, enforcing "MM:SS" format
+    // Allow only numbers and one colon
     let formattedText = text.replace(/[^0-9:]/g, "");
 
-    // Automatically insert colon if needed
-    if (formattedText.length === 2 && !formattedText.includes(":")) {
-      formattedText += ":";
+    // Ensure only one colon is present
+    const colonCount = (formattedText.match(/:/g) || []).length;
+    if (colonCount > 1) {
+      return;
     }
 
-    // Enforce max length of 5 (MM:SS)
+    // Automatically insert colon after two digits if missing
+    if (formattedText.length > 2 && !formattedText.includes(":")) {
+      formattedText = formattedText.slice(0, 2) + ":" + formattedText.slice(2);
+    }
+
+    // Restrict length to 5 characters (MM:SS)
     if (formattedText.length > 5) {
       return;
     }
 
-    setTimey(formattedText);
+    setCustomTime(formattedText);
   };
 
   return (
@@ -210,31 +250,55 @@ const CountdownTimer = forwardRef<CountdownHandle, CountdownTimerProps>((props, 
       {label ? (
         <Text style={styles.labelText}>{label}</Text>
       ) : null}
-      <Animated.Text
-        style={[
-          styles.timeText,
-          {
-            transform: [{ scale: time <= 10 ? scaleAnim : 1 }],
-            color: "#fff",
-            textShadowColor: "#000",
-          },
-        ]}
-      >
-        {formatTime(time)}
-      </Animated.Text>
-      {/* <TextInput
-        style={{
-          color: "white",
-          fontSize: 24,
-          textAlign: "center",
-        }}
-        value={timey}
-        onChangeText={handleChange}
-        keyboardType="numeric"
-        placeholder="MM:SS"
-        placeholderTextColor="rgba(255, 255, 255, 0.5)"
-        maxLength={5}
-      /> */}
+      {showCustom ? (
+        <TextInput
+          style={styles.timeText}
+          value={customTime}
+          onChangeText={handleChange}
+          selectionColor="#ffd700"
+          keyboardType="numeric"
+          placeholder="MM:SS"
+          placeholderTextColor="rgba(255, 255, 255, 0.5)"
+          maxLength={5}
+          onBlur={() => {
+            if (customTime.length === 5) {
+              const customMinutes = parseInt(customTime.split(":")[0]) || 0
+              const customSeconds = parseInt(customTime.split(":")[1]) || 0
+              const totalSeconds = customMinutes * 60 + customSeconds;
+              if (totalSeconds > 0) {
+                setTime(totalSeconds);
+                setShowCustom(false);
+              }
+            } else if (customTime.length <= 2) {
+              const customSeconds = parseInt(customTime)
+              if (customSeconds > 0) {
+                setTime(customSeconds);
+                setShowCustom(false);
+              }
+            }
+          }}
+        />
+      ) : (
+        <Animated.Text
+          style={[
+            styles.timeText,
+            {
+              transform: [{ scale: time <= 10 ? scaleAnim : 1 }],
+            },
+          ]}
+          onPress={() => {
+            if (!isRunning) {
+              setShowCustom(true)
+              const setMin = Math.floor(time / 60)
+              const setSec = time % 60
+              const timeString =  `${setMin === 0 ? "00" : setMin < 10 ? `0${setMin}` : setMin}:${setSec === 0 ? "00" : setSec < 10 ? `0${setSec}` : setSec}`
+              setCustomTime(timeString)
+            }
+          }}
+        >
+          {formatTime(time)}
+        </Animated.Text>
+      )}
 
       {showPresetTimes ? (
         <ScrollView
@@ -362,6 +426,8 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 48,
     fontWeight: 'bold',
+    color: "#fff",
+    textShadowColor: "#000",
     textShadowOffset: {
       width: 0.75,
       height: 0.75,

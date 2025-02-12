@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   timeText: {
-    fontSize: 48,
+    fontSize: 24,
     fontWeight: 'bold',
     // marginBottom: 30,
     textShadowOffset: {

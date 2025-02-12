@@ -626,7 +626,7 @@ export default function FitnessSettings({ fitnessProfile, isLoading, isRefetchin
             medications: historyAnswers.medications?.answer,
             explanation_medications: historyAnswers.medications?.explanation,
           }
-          saveProfile.mutate(updatedFitnessProfile)
+          saveProfile(updatedFitnessProfile)
         }}
       />
     </View>

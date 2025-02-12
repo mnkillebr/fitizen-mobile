@@ -1,4 +1,4 @@
-import { StyleSheet, Platform, Text, View, TextInput, Keyboard, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Platform, Text, View, TextInput, Keyboard, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -240,125 +240,135 @@ export default function ProfileScreen() {
         </Tab>
         <TabView value={tabIndex} onChange={setTabIndex} animationType="spring">
           <TabView.Item className="p-4 w-full">
-            <View className="flex-col gap-y-8">
+            <View className="flex-col">
               <Text className='text-gray-400'>Manage your account settings and user information</Text>
-              <View className="flex-col items-center">
-                {image ? (
-                  <Image
-                    key={image}
-                    source={{ uri: image }}
-                    style={{ width: 120, height: 120, borderRadius: 60 }}
-                    contentFit="cover"
-                    // transition={100}
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={isRefetching}
+                    onRefresh={refetch}
                   />
-                ) : (
-                  <Avatar
-                    size={120}
-                    rounded
-                    title={`${session.user.firstName[0]}${session.user.lastName[0]}`}
-                    containerStyle={{ backgroundColor: Colors[colorScheme ?? "light"].backgroundMuted }}
-                    onPress={pickImage}
-                  >
-                    <Avatar.Accessory size={32} />
-                  </Avatar>
-                )}
-                <TouchableOpacity className='flex-row gap-2 mt-4 items-center' onPress={pickImage}>
-                  <Icon
-                    size={20}
-                    source='camera'
-                    color={Colors[colorScheme ?? "light"].text}
-                  />
-                  <ThemedText style={{ fontSize: 14 }}>{`${image ? "Change" : "Choose"} Profile Photo`}</ThemedText>
-                </TouchableOpacity>
-              </View>
-              <View className="border rounded-md p-4" style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
-                <ThemedText type="defaultSemiBold">User Settings</ThemedText>
-                <Text className='text-gray-400'>Keep your user profile up to date</Text>
-                <View className='mt-2 flex-col'>
-                  <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>First Name</ThemedText>
-                  <TextInput
-                    style={[styles.input, isFocused.first && styles.inputFocused, { color: Colors[colorScheme ?? "light"].text }]}
-                    placeholder="First Name"
-                    placeholderTextColor="#78716c"
-                    value={firstName}
-                    onChangeText={setFirstName}
-                    selectionColor="#fff"
-                    keyboardType="default"
-                    autoCapitalize="none"
-                    autoComplete="off"
-                    onFocus={() => setIsFocused({
-                      ...isFocused,
-                      first: true,
-                    })}
-                    onBlur={() => setIsFocused({
-                      ...isFocused,
-                      first: false,
-                    })}
-                  />
-                  <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>Last Name</ThemedText>
-                  <TextInput
-                    style={[styles.input, isFocused.last && styles.inputFocused, { color: Colors[colorScheme ?? "light"].text }]}
-                    placeholder="Last Name"
-                    placeholderTextColor="#78716c"
-                    value={lastName}
-                    onChangeText={setLastName}
-                    selectionColor="#fff"
-                    keyboardType="default"
-                    autoCapitalize="none"
-                    autoComplete="off"
-                    onFocus={() => setIsFocused({
-                      ...isFocused,
-                      last: true,
-                    })}
-                    onBlur={() => setIsFocused({
-                      ...isFocused,
-                      last: false,
-                    })}
-                  />
-                  <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>Email</ThemedText>
-                  <TextInput
-                    style={[styles.input, isFocused.last && styles.inputFocused, { color: Colors[colorScheme ?? "light"].text }]}
-                    placeholder="Email Name"
-                    placeholderTextColor="#78716c"
-                    value={email}
-                    onChangeText={handleEmailChange}
-                    selectionColor="#fff"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="off"
-                    onFocus={() => setIsFocused({
-                      ...isFocused,
-                      email: true,
-                    })}
-                    onBlur={() => setIsFocused({
-                      ...isFocused,
-                      email: false,
-                    })}
+                }
+              >
+                <View className="flex-col items-center my-8">
+                  {image ? (
+                    <Image
+                      key={image}
+                      source={{ uri: image }}
+                      style={{ width: 120, height: 120, borderRadius: 60 }}
+                      contentFit="cover"
+                      // transition={100}
+                    />
+                  ) : (
+                    <Avatar
+                      size={120}
+                      rounded
+                      title={`${session.user.firstName[0]}${session.user.lastName[0]}`}
+                      containerStyle={{ backgroundColor: Colors[colorScheme ?? "light"].backgroundMuted }}
+                      onPress={pickImage}
+                    >
+                      <Avatar.Accessory size={32} />
+                    </Avatar>
+                  )}
+                  <TouchableOpacity className='flex-row gap-2 mt-4 items-center' onPress={pickImage}>
+                    <Icon
+                      size={20}
+                      source='camera'
+                      color={Colors[colorScheme ?? "light"].text}
+                    />
+                    <ThemedText style={{ fontSize: 14 }}>{`${image ? "Change" : "Choose"} Profile Photo`}</ThemedText>
+                  </TouchableOpacity>
+                </View>
+                <View className="border rounded-md p-4 mb-20" style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+                  <ThemedText type="defaultSemiBold">User Settings</ThemedText>
+                  <Text className='text-gray-400'>Keep your user profile up to date</Text>
+                  <View className='mt-2 flex-col'>
+                    <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>First Name</ThemedText>
+                    <TextInput
+                      style={[styles.input, isFocused.first && styles.inputFocused, { color: Colors[colorScheme ?? "light"].text }]}
+                      placeholder="First Name"
+                      placeholderTextColor="#78716c"
+                      value={firstName}
+                      onChangeText={setFirstName}
+                      selectionColor="#fff"
+                      keyboardType="default"
+                      autoCapitalize="none"
+                      autoComplete="off"
+                      onFocus={() => setIsFocused({
+                        ...isFocused,
+                        first: true,
+                      })}
+                      onBlur={() => setIsFocused({
+                        ...isFocused,
+                        first: false,
+                      })}
+                    />
+                    <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>Last Name</ThemedText>
+                    <TextInput
+                      style={[styles.input, isFocused.last && styles.inputFocused, { color: Colors[colorScheme ?? "light"].text }]}
+                      placeholder="Last Name"
+                      placeholderTextColor="#78716c"
+                      value={lastName}
+                      onChangeText={setLastName}
+                      selectionColor="#fff"
+                      keyboardType="default"
+                      autoCapitalize="none"
+                      autoComplete="off"
+                      onFocus={() => setIsFocused({
+                        ...isFocused,
+                        last: true,
+                      })}
+                      onBlur={() => setIsFocused({
+                        ...isFocused,
+                        last: false,
+                      })}
+                    />
+                    <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>Email</ThemedText>
+                    <TextInput
+                      style={[styles.input, isFocused.last && styles.inputFocused, { color: Colors[colorScheme ?? "light"].text }]}
+                      placeholder="Email Name"
+                      placeholderTextColor="#78716c"
+                      value={email}
+                      onChangeText={handleEmailChange}
+                      selectionColor="#fff"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="off"
+                      onFocus={() => setIsFocused({
+                        ...isFocused,
+                        email: true,
+                      })}
+                      onBlur={() => setIsFocused({
+                        ...isFocused,
+                        email: false,
+                      })}
+                    />
+                  </View>
+                  {message ? <Text style={styles.message}>{message}</Text> : null}
+                  <FAB
+                    label="Save Changes"
+                    style={{
+                      backgroundColor: Colors[colorScheme ?? 'light'].tint,
+                      shadowColor: colorScheme === "dark" ? "#fff" : "unset",
+                    }}
+                    color="black"
+                    customSize={40}
+                    disabled={firstName === session.user.firstName && lastName === session.user.lastName && email === session.user.email}
+                    onPress={() => {
+                      if (isValidEmail) {
+
+                      } else {
+                        setMessage("Invalid email format")
+                      }
+                    }}
                   />
                 </View>
-                {message ? <Text style={styles.message}>{message}</Text> : null}
-                <FAB
-                  label="Save Changes"
-                  style={{
-                    backgroundColor: Colors[colorScheme ?? 'light'].tint,
-                    shadowColor: colorScheme === "dark" ? "#fff" : "unset",
-                  }}
-                  color="black"
-                  customSize={40}
-                  disabled={firstName === session.user.firstName && lastName === session.user.lastName && email === session.user.email}
-                  onPress={() => {
-                    if (isValidEmail) {
-
-                    } else {
-                      setMessage("Invalid email format")
-                    }
-                  }}
-                />
-              </View>
+              </ScrollView>
             </View>
           </TabView.Item>
           <TabView.Item className="p-4 w-full">
-            <FitnessSettings fitnessProfile={fitnessProfile} isLoading={isLoading} isRefetching={isRefetching} refetch={refetch} saveProfile={saveProfileMutation} />
+            <FitnessSettings fitnessProfile={fitnessProfile} isLoading={isLoading} isRefetching={isRefetching} refetch={refetch} saveProfile={saveProfileMutation.mutate} />
           </TabView.Item>
         </TabView>
         {/* <Button onPress={signOut} style={{ backgroundColor: '#ffd700', borderRadius: 8, }} textColor='black'>

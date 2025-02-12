@@ -12,8 +12,8 @@ import { Dialog } from '@rneui/themed';
 import { useQuery } from '@tanstack/react-query';
 import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Dimensions, ImageBackground, Keyboard, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
-import { Image } from 'expo-image';
+import { ActivityIndicator, Alert, Animated, Dimensions, Keyboard, Pressable, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Image, ImageBackground } from 'expo-image';
 import { FAB, IconButton, TextInput, } from 'react-native-paper';
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from '@/providers/auth-provider';
@@ -23,6 +23,8 @@ import { useBottomSheet } from '@/providers/bottom-sheet-provider';
 import { finishProgramWorkout, recordProgramSet, setCurrentProgramExercise } from '@/redux/slices/programWorkoutLogSlice';
 import AnimatedDrawer from '@/components/AnimatedDrawer';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSharedValue } from 'react-native-reanimated';
+import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 
 const { height, width } = Dimensions.get("window")
 
@@ -37,6 +39,21 @@ type BlockExercise = {
   time: number;
   notes: string;
   rest: number;
+}
+
+interface CarouselExerciseItemType {
+  gif: string;
+  img: string;
+  next?: string;
+  exerciseId?: string;
+  name?: string;
+  currentSet?: number;
+  sets?: string;
+  target?: string;
+  reps?: string;
+  time?: string;
+  notes?: string;
+  rest?: string;
 }
 
 function transformArray(input: BlockExercise[]): BlockExercise[] {
@@ -93,6 +110,9 @@ export default function WorkoutFlowScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const stopwatchRef = useRef<StopwatchHandle>(null);
   const countdownRef = useRef<CountdownHandle>(null);
+  const countdownRef2 = useRef<CountdownHandle>(null);
+  const scrollOffsetValue = useSharedValue<number>(0);
+  const carouselRef = useRef<ICarouselInstance>(null);
   const [currentLoad, setCurrentLoad] = useState<string | undefined>(undefined);
   const [currentReps, setCurrentReps] = useState<string | undefined>(undefined);
   const [currentNotes, setCurrentNotes] = useState<string | undefined>(undefined);
@@ -144,6 +164,18 @@ export default function WorkoutFlowScreen() {
     allExercises,
   } = useMemo(() => {
     if (data) {
+      const allExercises = [
+        ...Object.values(data.movementPrep)
+          .filter(prep => prep.order)
+          .sort((a,b) => a.order - b.order)
+          .flatMap(prep => prep.exercises.map(ex => ({...ex, ...ex.exercise, type: prep.type}))),
+        ...Object.values(data.warmup)
+          .filter(prep => prep.order)
+          .sort((a,b) => a.order - b.order)
+          .flatMap(prep => prep.exercises.map(ex => ({...ex, ...ex.exercise, type: prep.type}))),
+        ...data.currentProgramWorkout.blocks.flatMap(block => transformArray(block.exercises)),
+        ...data.cooldown.exercises.map(ex => ({...ex, ...ex.exercise})),
+      ]
       return {
         ...data,
         movementPrep: Object.values(data.movementPrep)
@@ -156,18 +188,10 @@ export default function WorkoutFlowScreen() {
           .flatMap(prep => prep.exercises.map(ex => ({...ex, ...ex.exercise, type: prep.type}))),
         cooldown: data.cooldown.exercises.map(ex => ({...ex, ...ex.exercise})),
         mainExercises: data.currentProgramWorkout.blocks.flatMap(block => transformArray(block.exercises)),
-        allExercises: [
-          ...Object.values(data.movementPrep)
-            .filter(prep => prep.order)
-            .sort((a,b) => a.order - b.order)
-            .flatMap(prep => prep.exercises.map(ex => ({...ex, ...ex.exercise, type: prep.type}))),
-          ...Object.values(data.warmup)
-            .filter(prep => prep.order)
-            .sort((a,b) => a.order - b.order)
-            .flatMap(prep => prep.exercises.map(ex => ({...ex, ...ex.exercise, type: prep.type}))),
-          ...data.currentProgramWorkout.blocks.flatMap(block => transformArray(block.exercises)),
-          ...data.cooldown.exercises.map(ex => ({...ex, ...ex.exercise})),
-        ]
+        allExercises: allExercises.map((ex, exIdx) => ({
+          ...ex,
+          next: allExercises[exIdx+1] ? (allExercises[exIdx+1].gif || allExercises[exIdx+1].img) : undefined
+        }))
         // currentProgramWorkout: data.currentProgramWorkout.flatMap(block => transformArray(block.exercises)),
       }
     } else {
@@ -189,8 +213,19 @@ export default function WorkoutFlowScreen() {
   useEffect(() => {
     if (allExercises.length) {
       preloadImages();
+      if (allExercises[currentIndex].exerciseId) {
+        dispatch(setCurrentProgramExercise(allExercises[currentIndex]))
+      }
     }
   }, [currentIndex, allExercises]);
+
+  const onPressPagination = (index: number) => {
+    // console.log("pagination", index)
+		carouselRef.current?.scrollTo({
+			count: index,
+			animated: true,
+		});
+	};
   
    // Preload adjacent images
    const preloadImages = () => {
@@ -254,32 +289,227 @@ export default function WorkoutFlowScreen() {
             colors={['rgba(0,0,0,0.9)', 'transparent']}
             style={styles.headerBackgroud}
           />
-          <View className='absolute top-0 z-20'>
+          <View className='w-full absolute top-0 z-20 flex-row justify-between items-center'>
             <IconButton
               icon="arrow-left"
-              // iconColor={Colors[colorScheme ?? 'light'].tint}
-              iconColor="black"
-              style={{ backgroundColor: Colors[colorScheme ?? 'light'].tint }}
+              iconColor={Colors[colorScheme ?? 'light'].tint}
+              // iconColor="black"
+              style={styles.shadow}
               onPress={() => setOpenDialog(true)}
             />
+            <View className='flex-col items-center top-1.5'>
+              <Text className='font-bold text-2xl text-[#eeeeec]' style={styles.textShadow}>{program.name}</Text>
+              <Text className='font-bold text-lg text-[#eeeeec] -mt-2' style={styles.textShadow}>Week {programWeek} - Day {programDay}</Text>
+            </View>
+            <IconButton
+              icon="export-variant"
+              iconColor={Colors[colorScheme ?? 'light'].tint}
+              // iconColor="black"
+              style={styles.shadow}
+              // onPress={() => setOpenDialog(true)}
+            />
           </View>
-          <View className='absolute top-1 inset-x-0 z-10'>
-            <Text className='font-bold text-2xl text-center text-[#eeeeec]' style={styles.textShadow}>{program.name}</Text>
-            <Text className='font-bold text-lg text-center text-[#eeeeec]' style={styles.textShadow}>Week {programWeek} - Day {programDay}</Text>
+          <View className='absolute top-24 z-10 flex-row flex-1 gap-2 flex-wrap mx-6'>
+            {allExercises.map((item, idx) => (
+              <Pressable
+                key={idx}
+                onPress={() => onPressPagination(idx-currentIndex)}
+              >
+                <View
+                  className="w-8 h-1 rounded-sm"
+                  style={[
+                    { backgroundColor: idx <= currentIndex ? "#fff" : "gray" },
+                    styles.shadow,
+                  ]}
+                />
+              </Pressable>
+            ))}
           </View>
-          <Image
+          {/* <Image
             key={currentImage}
             source={{ uri: currentImage }}
             style={{ width: "100%", aspectRatio: 9/16, borderRadius: 4, alignSelf: 'center', opacity: showStopwatch ? 1 : 0.5 }}
             contentFit="cover"
             transition={100}
+          /> */}
+          <Carousel
+            ref={carouselRef}
+            loop={false}
+            width={width}
+            height={height}
+            snapEnabled={true}
+            pagingEnabled={true}
+            data={allExercises}
+            defaultScrollOffsetValue={scrollOffsetValue}
+            // style={{ width: "100%" }}
+            // onScrollStart={() => {
+            //   console.log("Scroll start");
+            // }}
+            // onScrollEnd={() => {
+            //   console.log("Scroll end");
+            // }}
+            onConfigurePanGesture={(g: { enabled: (arg0: boolean) => any }) => {
+              "worklet";
+              g.enabled(false);
+            }}
+            onSnapToItem={(index: number) => {
+              // console.log("current", currentIndex, "go to", index)
+              // setCurrentIndex(index)
+              setOpenDrawer(false)
+              if (!showStopwatch) {
+                setCountdownRunning(false)
+                setShowStopwatch(true)
+              } else {
+                setCountdownRunning(false)
+                const currentSetData = {
+                  programBlockId: allExercises[currentIndex].programBlockId,
+                  exerciseId: allExercises[currentIndex].exerciseId,
+                  exerciseName: allExercises[currentIndex].name,
+                  // exerciseThumbnail: allExercises[currentIndex].gif,
+                  orderInBlock: allExercises[currentIndex].orderInBlock,
+                  set: {
+                    set: allExercises[currentIndex].currentSet,
+                    // actualReps: currentReps,
+                    // load: currentLoad ? parseInt(currentLoad) : undefined,
+                    // notes: currentNotes,
+                    unit: "pound",
+                  },
+                  // target: restMappedDetails[currentIndex].target,
+                  targetReps: allExercises[currentIndex].reps ?? undefined,
+                  time: allExercises[currentIndex].time ?? undefined,
+                }
+                // console.log(currentSetData)
+                if (allExercises[currentIndex].exerciseId) {
+                  dispatch(recordProgramSet(currentSetData))
+                }
+                if (allExercises[index]) {
+                  setCurrentIndex(index)
+                  // setCurrentLoad("")
+                  // setCurrentReps("")
+                  if (allExercises[index].time) {
+                    const newTime = typeof allExercises[index].time === "number" ? allExercises[index].time : allExercises[index].time.includes("min") ? parseInt(allExercises[index].time) * 60 : parseInt(allExercises[index].time)
+                    handleResetCountdown(newTime)
+                    countdownRef.current?.resume();
+                  }
+                }
+              }
+            }}
+            renderItem={({ item }: { item: CarouselExerciseItemType }) => {
+              const current = item.gif || item.img
+              const next = item.next
+              let rest = 0
+              if (item.rest) {
+                rest = item.rest.includes("min") ? parseInt(item.rest) * 60 : parseInt(item.rest)
+                // countdownRef2.current?.pause()
+                // countdownRef2.current?.reset(rest)
+              }
+              return (
+                <View className='h-full'>
+                  <ImageBackground
+                    key={current}
+                    source={{ uri: current }}
+                    style={{ width: "100%", aspectRatio: 9/16, opacity: showStopwatch ? 1 : 0.5 }}
+                    contentFit="cover"
+                    transition={100}
+                  >
+                  {item.exerciseId ? (
+                    <View className="absolute bottom-4 inset-x-0 w-3/4">
+                      {/* <Text className='text-lg font-semibold ml-4 text-[#eeeeec]' style={styles.textShadow}>Current Exercise:</Text> */}
+                      <Text className='text-lg font-bold ml-4 text-[#eeeeec]' style={styles.textShadow}>{item.name}</Text>
+                      <View className='flex-row gap-x-4 gap-y-2 ml-4 flex-wrap w-2/3'>
+                        <View className='flex-col'>
+                          <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Sets</Text>
+                          <Text className='text-[#eeeeec]'>{item.currentSet ?? 1}/{item.sets ?? 1}</Text>
+                        </View>
+                        <View className='flex-col'>
+                          <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Target</Text>
+                          <Text className='text-[#eeeeec]'>{item.reps && item.time ? `${item.reps} reps, ${item.time} sec per rep` : item.reps ? `${item.reps} reps`: item.time}</Text>
+                        </View>
+                        <View className={`flex-col min-w-20 ${item.notes ? "" : "hidden"}`}>
+                          <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Notes</Text>
+                          <Text className='text-[#eeeeec]'>{item.notes}</Text>
+                        </View>
+                        {/* <View className='flex-col'>
+                          <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Load Used</Text>
+                          <TextInput
+                            onTouchStart={(e) => e.stopPropagation()}
+                            maxLength={4}
+                            placeholder='Enter load'
+                            placeholderTextColor="#fff"
+                            caretHidden
+                            inputMode="numeric"
+                            underlineStyle={{ display: "none" }}
+                            contentStyle={{ color: "#e8e5dc", backgroundColor: "#565656", }}
+                            keyboardType="numeric"
+                            // dense
+                            style={{ height: 28, width: 84, fontSize: 14, paddingHorizontal: 8 }}
+                            selectionColor='#ffd700'
+                            value={currentLoad}
+                            onChangeText={setCurrentLoad}
+                          />
+                        </View>
+                        <View className='flex-col'>
+                          <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Reps Completed</Text>
+                          <TextInput
+                            onTouchStart={(e) => e.stopPropagation()}
+                            maxLength={4}
+                            placeholder='Enter reps'
+                            placeholderTextColor="#fff"
+                            caretHidden
+                            inputMode="numeric"
+                            underlineStyle={{ display: "none" }}
+                            contentStyle={{ color: "#e8e5dc", backgroundColor: "#565656", }}
+                            keyboardType="number-pad"
+                            // dense
+                            style={{ height: 28, width: 84, fontSize: 14, paddingHorizontal: 8 }}
+                            selectionColor='#ffd700'
+                            value={currentReps}
+                            onChangeText={setCurrentReps}
+                          />
+                        </View> */}
+                      </View>
+                    </View>
+                  ) : (
+                    <View className="absolute bottom-56 inset-x-0">
+                      <CountdownTimer
+                        ref={countdownRef2}
+                        showPresetTimes={false}
+                        autoStart={false}
+                        showCustomInput={false}
+                        showControls={false}
+                        showReset={false}
+                        showPlay
+                        showSound={true}
+                        // defaultTime={1}
+                        defaultTime={rest}
+                      />
+                      <Text className='text-3xl font-semibold text-center text-[#eeeeec]' style={styles.textShadow}>Rest Period</Text>
+                    </View>
+                  )}
+                  {next && (
+                    <View className="absolute bottom-4 right-4">
+                      <ImageBackground
+                        key={next}
+                        source={{ uri: next }}
+                        style={{ width: 100, aspectRatio: 4/3, borderRadius: 4, alignSelf: 'center', opacity: 0.85 }}
+                        contentFit="cover"
+                        transition={100}
+                      >
+                        <Text className='left-1 text-lg font-semibold text-[#eeeeec]' style={styles.textShadow}>Up Next:</Text>
+                      </ImageBackground>
+                    </View>
+                  )}
+                  </ImageBackground>
+                </View>
+              )
+            }}
           />
-          <View className="absolute top-2 inset-x-0">
+          <View className={`absolute z-10 ${showStopwatch ? "" : "top-20 inset-x-0"}`}>
             {showStopwatch ? (
               <Stopwatch
                 ref={stopwatchRef}
                 autoStart={true}
-                label='Elapsed Time'
+                // label='Elapsed Time'
                 onStateChange={handleStopwatchStateChange}
               />
             ) : (
@@ -291,164 +521,55 @@ export default function WorkoutFlowScreen() {
                 showControls={false}
                 showReset={false}
                 showSound={true}
-                label="Get Ready!"
                 showPlay={false}
+                label="Get Ready!"
                 // defaultTime={1}
                 onStateChange={handleCountdownStateChange}
-                onCountdownEnd={() => setShowStopwatch(true)}
+                onCountdownEnd={() => {
+                  setCountdownRunning(false)
+                  setShowStopwatch(true)
+                }}
               />
             )}
           </View>
-          {!allExercises[currentIndex].gif && allExercises[currentIndex].rest ? (
-            <View className="absolute bottom-28 inset-x-0">
-              <CountdownTimer
-                ref={countdownRef}
-                showPresetTimes={false}
-                autoStart={true}
-                showCustomInput={false}
-                showControls={false}
-                showReset={false}
-                showSound={true}
-                showPlay={false}
-                onCountdownEnd={() => {
-                  setCurrentIndex(currentIndex+1)
-                  if (allExercises[currentIndex+1].time) {
-                    const newTime = allExercises[currentIndex+1].time
-                    handleResetCountdown(newTime)
-                    // handleResetCountdown(5)
-                    countdownRef.current?.resume();
-                  }
-                }}
-                // defaultTime={1}
-                defaultTime={allExercises[currentIndex].rest}
-              />
-              <Text className='text-3xl font-semibold text-center text-[#eeeeec]' style={styles.textShadow}>Rest Period</Text>
-            </View>
-          ) : (
-            <View className="absolute -bottom-2 inset-x-0">
-              {/* {allExercises[currentIndex].time ? (
-                <CountdownTimer
-                  ref={countdownRef}
-                  showPresetTimes={false}
-                  autoStart={true}
-                  showCustomInput={false}
-                  showControls={false}
-                  showSound={true}
-                  showPlay={false}
-                  onStateChange={setCountdownRunning}
-                  // defaultTime={1}
-                  defaultTime={allExercises[currentIndex].time}
-                />
-              ) : null} */}
-              <Text className='text-lg font-semibold ml-4 text-[#eeeeec]' style={styles.textShadow}>
-                {allExercises[currentIndex].movementPrepId ? 'Movement Prep' : allExercises[currentIndex].warmupId ? 'Warmup' : allExercises[currentIndex].cooldownId ? 'Cooldown' : 'Current Exercise'}:
-              </Text>
-              <Text className='text-lg font-bold ml-4 text-[#eeeeec]' style={styles.textShadow}>{allExercises[currentIndex].name}</Text>
-              <View className='flex-col gap-y-2 ml-4 w-2/3'>
-                <View className='flex-row gap-x-4'>
-                  {allExercises[currentIndex].sets ? (
-                    <View className='flex-col'>
-                      <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Sets</Text>
-                      <Text className='text-[#eeeeec]'>{allExercises[currentIndex].currentSet}/{allExercises[currentIndex].sets}</Text>
-                    </View>
-                  ) : null}
-                  <View className='flex-col'>
-                    <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Target</Text>
-                    <Text className='text-[#eeeeec]'>{allExercises[currentIndex].reps ? `${allExercises[currentIndex].reps} reps`: allExercises[currentIndex].time}</Text>
-                  </View>
-                  {allExercises[currentIndex].time ? (
-                    <View className='flex-col'>
-                      <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Time</Text>
-                      <Text className='text-[#eeeeec]'>{allExercises[currentIndex].time} sec</Text>
-                    </View>)
-                  : null}
-                </View>
-                {allExercises[currentIndex].notes ? (
-                  <View className={`flex-col min-w-20 ${allExercises[currentIndex].notes ? "" : "invisible"}`}>
-                  <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Notes</Text>
-                  <Text className='text-[#eeeeec]'>{allExercises[currentIndex].notes}</Text>
-                  </View>
-                ) : null}
-                {allExercises[currentIndex].programBlockId ? (
-                  <View className='flex-row gap-x-4'>
-                    <View className='flex-col'>
-                      <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Load Used</Text>
-                      <TextInput
-                        onTouchStart={(e) => e.stopPropagation()}
-                        maxLength={4}
-                        placeholder='Enter load'
-                        placeholderTextColor="#fff"
-                        caretHidden
-                        inputMode="numeric"
-                        underlineStyle={{ display: "none" }}
-                        contentStyle={{ color: "#e8e5dc", backgroundColor: "#565656", }}
-                        keyboardType="numeric"
-                        // dense
-                        style={{ height: 28, width: 84, fontSize: 14, paddingHorizontal: 8 }}
-                        selectionColor='#ffd700'
-                        value={currentLoad}
-                        onChangeText={setCurrentLoad}
-                      />
-                    </View>
-                    <View className='flex-col'>
-                      <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Reps Completed</Text>
-                      <TextInput
-                        onTouchStart={(e) => e.stopPropagation()}
-                        maxLength={4}
-                        placeholder='Enter reps'
-                        placeholderTextColor="#fff"
-                        caretHidden
-                        inputMode="numeric"
-                        underlineStyle={{ display: "none" }}
-                        contentStyle={{ color: "#e8e5dc", backgroundColor: "#565656", }}
-                        keyboardType="number-pad"
-                        // dense
-                        style={{ height: 28, width: 84, fontSize: 14, paddingHorizontal: 8 }}
-                        selectionColor='#ffd700'
-                        value={currentReps}
-                        onChangeText={setCurrentReps}
-                      />
-                    </View>
-                  </View>
-                ) : null}
-              </View>
-            </View>
-          )}
-          {nextImage && (
-            <View className="absolute -bottom-2 right-4">
-              <Text className='relative top-6 z-10 text-lg font-semibold text-[#eeeeec]' style={styles.textShadow}>Up Next:</Text>
-              <Image
-                key={nextImage}
-                source={{ uri: nextImage }}
-                style={{ width: 100, aspectRatio: 4/3, borderRadius: 4, alignSelf: 'center', opacity: 0.7 }}
-                contentFit="cover"
-                transition={200}
-              />
-            </View>
-          )}
-          <View className="absolute top-1/2 right-0 z-10">
+        </ThemedView>
+        <View className="absolute top-1/2 right-0 z-10">
+          <IconButton
+            icon="timer"
+            iconColor={openDrawer ? Colors[colorScheme ?? "light"].tint : "#eeeeec"}
+            onPress={() => {
+              // console.log("show timer")
+              setOpenDrawer(!openDrawer)
+              countdownRef.current?.reset(0)
+            }}
+          />
+          {allExercises[currentIndex].programBlockId ? (
             <IconButton
-              icon="timer"
-              iconColor={openDrawer ? Colors[colorScheme ?? "light"].tint : "#eeeeec"}
+              icon="comment-processing"
+              iconColor="#eeeeec"
               onPress={() => {
-                // console.log("show timer")
-                setOpenDrawer(!openDrawer)
+                // setContent(true)
+                open()
               }}
             />
-            {allExercises[currentIndex].programBlockId ? (
-              <IconButton
-                icon="comment-processing"
-                iconColor="#eeeeec"
-                onPress={() => {
-                  // setContent(true)
-                  open()
-                }}
-              />
-            ) : null}
-          </View>
-        </ThemedView>
-        <View className="flex-row w-full px-3 justify-between absolute" style={{ bottom: tabBarHeight ? tabBarHeight+12 : 32 }}>
-          <FAB
+          ) : null}
+        </View>
+        {allExercises[currentIndex].programBlockId ? (
+          <TouchableOpacity
+            className="absolute bottom-5 self-center z-10"
+            onPress={() => {
+              open()
+            }}
+          >
+            <IconButton
+              icon="chevron-up"
+              iconColor="#eeeeec"
+            />
+            <Text className="text-[#eeeeec] text-center relative bottom-5">Log Set</Text>
+          </TouchableOpacity>
+        ) : null}
+        <View className="flex-row-reverse w-full px-3 justify-between absolute" style={{ bottom: tabBarHeight ? tabBarHeight+12 : 32 }}>
+          {/* <FAB
             icon="restart"
             size="medium"
             label="Restart"
@@ -475,8 +596,8 @@ export default function WorkoutFlowScreen() {
             }}
             color={Colors[colorScheme ?? 'light'].text}
             onPress={handleTogglePause}
-          />
-          <FAB
+          /> */}
+          {(currentIndex+1) === allExercises.length && <FAB
             icon={nextImage ? "chevron-right" : "flag-checkered"}
             size="medium"
             label={nextImage ? "Next" : "Finish"}
@@ -485,8 +606,12 @@ export default function WorkoutFlowScreen() {
             disabled={((!allExercises[currentIndex].gif && allExercises[currentIndex].rest !== "None") || countdownRunning || !showStopwatch)}
             onPress={() => {
               // console.log("current time", stopwatchRef.current?.getCurrentTime())
-              setOpenDrawer(false)
-              if (allExercises[currentIndex].programBlockId) {
+              if (!showStopwatch) {
+                setCountdownRunning(false)
+                setShowStopwatch(true)
+              } else {
+                setCountdownRunning(false)
+                setOpenDrawer(false)
                 const currentSetData = {
                   programBlockId: allExercises[currentIndex].programBlockId,
                   exerciseId: allExercises[currentIndex].exerciseId,
@@ -504,20 +629,9 @@ export default function WorkoutFlowScreen() {
                   targetReps: allExercises[currentIndex].reps ?? undefined,
                   time: allExercises[currentIndex].time ?? undefined,
                 }
-                dispatch(recordProgramSet(currentSetData))
-                // dispatch(setClearBottomSheet(true))
-              }
-              // console.log(currentSetData)
-              if (allExercises[currentIndex+1]) {
-                setCurrentIndex(currentIndex+1)
-                setCurrentLoad("")
-                setCurrentReps("")
-                setCurrentNotes("")
-                if (allExercises[currentIndex+1].programBlockId) {
-                  dispatch(setCurrentProgramExercise(allExercises[currentIndex+1]))
+                if (allExercises[currentIndex].programBlockId) {
+                  dispatch(recordProgramSet(currentSetData))
                 }
-              }
-              else {
                 const workoutDuration = `${stopwatchRef.current?.getCurrentTime()}`
                 dispatch(finishProgramWorkout(workoutDuration))
                 router.push({
@@ -530,7 +644,7 @@ export default function WorkoutFlowScreen() {
                 })
               }
             }}
-          />
+          />}
         </View>
         <Dialog
           isVisible={openDialog}
@@ -578,7 +692,7 @@ export default function WorkoutFlowScreen() {
             showReset={true}
             showSound={true}
             label="Timer"
-            defaultTime={allExercises[currentIndex].time ? allExercises[currentIndex].time : undefined}
+            defaultTime={0}
             // onStateChange={handleCountdownStateChange}
             align='flex-end'
             // onCountdownEnd={() => setShowStopwatch(true)}
@@ -610,6 +724,15 @@ const styles = StyleSheet.create({
     // backgroundPosition: "center",
     height: 640,
     width: "100%"
+  },
+  shadow: {
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 4,
+      height: 4,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 4,
   },
   textShadow: {
     textShadowColor: "#000",

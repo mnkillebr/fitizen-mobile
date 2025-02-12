@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 interface ProgramExerciseLogSet {
   set: string | number;
   actualReps?: string;
-  load?: number;
+  load?: string;
   notes?: string;
   unit: string;
 }
@@ -27,6 +27,8 @@ interface ProgramWorkoutLogState {
   exerciseLogs: ProgramExerciseLogType[];
   currentNote: string | undefined;
   currentExercise: any;
+  currentLoad?: string;
+  currentReps?: string;
 }
 
 const sampleWorkoutState: ProgramWorkoutLogState = {
@@ -45,14 +47,14 @@ const sampleWorkoutState: ProgramWorkoutLogState = {
         {
           set: 1,
           actualReps: '8',
-          load: 45,
+          load: '45',
           notes: 'Too ez',
           unit: 'pound'
         },
         {
           set: 2,
           actualReps: '8',
-          load: 55,
+          load: '55',
           unit: 'pound'
         }
       ]
@@ -67,14 +69,14 @@ const sampleWorkoutState: ProgramWorkoutLogState = {
         {
           set: 1,
           actualReps: '8',
-          load: 60,
+          load: '60',
           notes: 'Right is stronger',
           unit: 'pound'
         },
         {
           set: 2,
           actualReps: '8',
-          load: 65,
+          load: '65',
           unit: 'pound'
         }
       ]
@@ -127,13 +129,13 @@ const sampleWorkoutState: ProgramWorkoutLogState = {
         {
           set: 1,
           actualReps: '8',
-          load: 25,
+          load: '25',
           unit: 'pound'
         },
         {
           set: 2,
           actualReps: '8',
-          load: 25,
+          load: '25',
           unit: 'pound'
         }
       ]
@@ -148,13 +150,13 @@ const sampleWorkoutState: ProgramWorkoutLogState = {
         {
           set: 1,
           actualReps: '8',
-          load: 20,
+          load: '20',
           unit: 'pound'
         },
         {
           set: 2,
           actualReps: '8',
-          load: 20,
+          load: '20',
           unit: 'pound'
         }
       ]
@@ -207,13 +209,13 @@ const sampleWorkoutState: ProgramWorkoutLogState = {
         {
           set: 1,
           actualReps: '',
-          load: 70,
+          load: '70',
           unit: 'pound'
         },
         {
           set: 2,
           actualReps: '',
-          load: 70,
+          load: '70',
           unit: 'pound'
         }
       ]
@@ -269,6 +271,8 @@ const initialState: ProgramWorkoutLogState = {
   exerciseLogs: [],
   currentNote: undefined,
   currentExercise: undefined,
+  currentLoad: undefined,
+  currentReps: undefined,
 };
 
 export const programWorkoutLogSlice = createSlice({
@@ -312,6 +316,8 @@ export const programWorkoutLogSlice = createSlice({
               ...log,
               sets: [...log.sets, {
                 ...set,
+                actualReps: state.currentReps,
+                load: state.currentLoad,
                 notes: state.currentNote,
               }]
             }
@@ -320,6 +326,8 @@ export const programWorkoutLogSlice = createSlice({
               ...log,
               sets: [...log.sets, {
                 ...set,
+                actualReps: state.currentReps,
+                load: state.currentLoad,
                 notes: state.currentNote,
               }]
             }
@@ -340,6 +348,8 @@ export const programWorkoutLogSlice = createSlice({
             time,
             sets: [{
               ...set,
+              actualReps: state.currentReps,
+              load: state.currentLoad,
               notes: state.currentNote,
             }]
           }
@@ -366,11 +376,18 @@ export const programWorkoutLogSlice = createSlice({
     setCurrentProgramExercise(state, action: PayloadAction) {
       state.currentExercise = action.payload;
     },
-    saveProgramNote(state, action: PayloadAction<string>) {
-      state.currentNote = action.payload;
-    }
+    saveProgramSet(state, action: PayloadAction<{
+      notes?: string;
+      load?: string;
+      reps?: string;
+    }>) {
+      const { notes, load, reps } = action.payload;
+      state.currentNote = notes;
+      state.currentLoad = load;
+      state.currentReps = reps;
+    },
   },
 });
 
-export const { startProgramWorkout, recordProgramSet, finishProgramWorkout, resetProgramWorkoutLog, cancelProgramWorkout, setCurrentProgramExercise, saveProgramNote } = programWorkoutLogSlice.actions;
+export const { startProgramWorkout, recordProgramSet, finishProgramWorkout, resetProgramWorkoutLog, cancelProgramWorkout, setCurrentProgramExercise, saveProgramSet } = programWorkoutLogSlice.actions;
 export default programWorkoutLogSlice.reducer;

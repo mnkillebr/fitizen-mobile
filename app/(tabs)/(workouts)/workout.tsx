@@ -12,14 +12,16 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Dialog } from '@rneui/themed';
 import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ImageBackground, Keyboard, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
-import { Image } from 'expo-image';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dimensions, Keyboard, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ImageBackground } from 'expo-image';
 import { FAB, IconButton, TextInput, } from 'react-native-paper';
 import { useDispatch, useSelector } from "react-redux";
 import { useBottomSheet } from '@/providers/bottom-sheet-provider';
 import AnimatedDrawer from '@/components/AnimatedDrawer';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 
 const DialogButton = ({ 
   title = 'Button',
@@ -37,6 +39,23 @@ const DialogButton = ({
   />
 )
 
+const { height, width } = Dimensions.get("window")
+
+interface CarouselExerciseItemType {
+  gif: string;
+  img: string;
+  next?: string;
+  exerciseId?: string;
+  name?: string;
+  currentSet?: number;
+  sets?: string;
+  target?: string;
+  reps?: string;
+  time?: string;
+  notes?: string;
+  rest?: string;
+}
+
 export default function WorkoutFlowScreen() {
   const { workoutId } = useLocalSearchParams();
   const [workoutPaused, setWorkoutPaused] = useState(false)
@@ -44,15 +63,19 @@ export default function WorkoutFlowScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const stopwatchRef = useRef<StopwatchHandle>(null);
   const countdownRef = useRef<CountdownHandle>(null);
-  const [currentLoad, setCurrentLoad] = useState<string | undefined>(undefined);
-  const [currentReps, setCurrentReps] = useState<string | undefined>(undefined);
+  const countdownRef2 = useRef<CountdownHandle>(null);
+  const scrollOffsetValue = useSharedValue<number>(0);
+  const carouselProgress = useSharedValue<number>(0);
+  const carouselRef = useRef<ICarouselInstance>(null);
+  const [currentLoad, setCurrentLoad] = useState<number | undefined>(undefined);
+  const [currentReps, setCurrentReps] = useState<number | undefined>(undefined);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showStopwatch, setShowStopwatch] = useState(false);
+  const [showStopwatch, setShowStopwatch] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [countdownRunning, setCountdownRunning] = useState(false);
   const [isCommentsVisible, setIsCommentsVisible] = useState(false);
-  const { open, setContent } = useBottomSheet();
+  const { open, } = useBottomSheet();
   const dispatch = useDispatch()
 
   const {
@@ -80,7 +103,7 @@ export default function WorkoutFlowScreen() {
   }, [data])
   const restMappedDetails = useMemo(() => {
     if (exerciseDetails.length) {
-      return exerciseDetails.flatMap((ex, exIdx) => {
+      const flattenedDetails = exerciseDetails.flatMap((ex, exIdx) => {
         if (ex.circuitId) {
           const sets = parseInt(ex.sets)
           // const circuits = Array(sets).fill([
@@ -118,6 +141,10 @@ export default function WorkoutFlowScreen() {
           }
         }
       })
+      return flattenedDetails.map((ex, exIdx) => ({
+        ...ex,
+        next: flattenedDetails[exIdx+1] ? (flattenedDetails[exIdx+1].gif || flattenedDetails[exIdx+1].img) : undefined
+      }))
     } else {
       return []
     }
@@ -126,15 +153,22 @@ export default function WorkoutFlowScreen() {
   useEffect(() => {
     if (restMappedDetails.length) {
       preloadImages();
-      if (setCurrentExercise(restMappedDetails[currentIndex].exerciseId)) {
-        // console.log("set current")
+      if (restMappedDetails[currentIndex].exerciseId) {
         dispatch(setCurrentExercise(restMappedDetails[currentIndex]))
       }
     }
   }, [currentIndex, restMappedDetails]);
-  
-   // Preload adjacent images
-   const preloadImages = () => {
+
+  const onPressPagination = (index: number) => {
+    // console.log("pagination", index)
+		carouselRef.current?.scrollTo({
+			count: index,
+			animated: true,
+		});
+	};
+
+  // Preload adjacent images
+  const preloadImages = () => {
     const preloadUris = [currentIndex, currentIndex + 1, currentIndex - 1]
       .filter((index) => restMappedDetails[index])
       .map((index) => restMappedDetails[index].gif || restMappedDetails[index].img);
@@ -166,45 +200,234 @@ export default function WorkoutFlowScreen() {
   const currentImage = restMappedDetails[currentIndex].gif || restMappedDetails[currentIndex].img
   const nextImage = restMappedDetails[currentIndex+1] ? (restMappedDetails[currentIndex+1].gif || restMappedDetails[currentIndex+1].img) : undefined
   const skip = ((!restMappedDetails[currentIndex].gif && restMappedDetails[currentIndex].rest !== "None") || countdownRunning || !showStopwatch)
-  // console.log("details", exerciseDetails)
-  // console.log("on workout screen first", showStopwatch, restMappedDetails[currentIndex])
 
   return (
-    // <ImageBackground
-    //   source={{ uri: testGif }}
-    //   style={styles.backgroundImage}
-    // >
-      
-    // </ImageBackground>
-    <ThemedSafeAreaView className='flex-1 relative'>
+    <ThemedSafeAreaView className='flex-1 relative flex-col'>
       <ThemedView className='' onTouchStart={Keyboard.dismiss}>
         <LinearGradient
           colors={['rgba(0,0,0,0.9)', 'transparent']}
           style={styles.headerBackgroud}
         />
-        <View className='absolute top-0 z-20'>
+        <View className='w-full absolute top-0 z-20 flex-row justify-between items-center'>
           <IconButton
             icon="arrow-left"
-            // iconColor={Colors[colorScheme ?? 'light'].tint}
-            iconColor="black"
-            style={{ backgroundColor: Colors[colorScheme ?? 'light'].tint }}
+            iconColor={Colors[colorScheme ?? 'light'].tint}
+            // iconColor="black"
+            style={styles.shadow}
             onPress={() => setOpenDialog(true)}
           />
+          <Text className='font-bold text-2xl text-[#eeeeec]' style={styles.textShadow}>{workout.name}</Text>
+          <IconButton
+            icon="export-variant"
+            iconColor={Colors[colorScheme ?? 'light'].tint}
+            // iconColor="black"
+            style={styles.shadow}
+            // onPress={() => setOpenDialog(true)}
+          />
         </View>
-        <Text className='absolute top-2 inset-x-0 z-10 font-bold text-2xl text-center text-[#eeeeec]' style={styles.textShadow}>{workout.name}</Text>
-        <Image
+        <View className='absolute top-24 z-10 flex-row flex-1 gap-2 flex-wrap mx-6'>
+          {restMappedDetails.map((item, idx) => (
+            <Pressable
+              key={idx}
+              onPress={() => onPressPagination(idx-currentIndex)}
+            >
+              <View
+                className="w-8 h-1 rounded-sm"
+                style={[
+                  { backgroundColor: idx <= currentIndex ? "#fff" : "gray" },
+                  styles.shadow,
+                ]}
+              />
+            </Pressable>
+          ))}
+        </View>
+        {/* <Image
           key={currentImage}
           source={{ uri: currentImage }}
           style={{ width: "100%", aspectRatio: 9/16, borderRadius: 4, alignSelf: 'center', opacity: showStopwatch ? 1 : 0.5 }}
           contentFit="cover"
           transition={100}
+        /> */}
+        <Carousel
+          ref={carouselRef}
+          loop={false}
+          width={width}
+          height={height}
+          snapEnabled={true}
+          pagingEnabled={true}
+          data={restMappedDetails}
+          defaultScrollOffsetValue={scrollOffsetValue}
+          // style={{ width: "100%" }}
+          // onScrollStart={() => {
+          //   console.log("Scroll start");
+          // }}
+          // onScrollEnd={() => {
+          //   console.log("Scroll end");
+          // }}
+          onConfigurePanGesture={(g: { enabled: (arg0: boolean) => any }) => {
+            "worklet";
+            g.enabled(false);
+          }}
+          onSnapToItem={(index: number) => {
+            // console.log("current", currentIndex, "go to", index)
+            // setCurrentIndex(index)
+            setOpenDrawer(false)
+            if (!showStopwatch) {
+              setCountdownRunning(false)
+              setShowStopwatch(true)
+            } else {
+              setCountdownRunning(false)
+              const currentSetData = {
+                circuitId: restMappedDetails[currentIndex].circuitId,
+                exerciseId: restMappedDetails[currentIndex].exerciseId,
+                exerciseName: restMappedDetails[currentIndex].name,
+                exerciseThumbnail: restMappedDetails[currentIndex].thumbnail,
+                orderInRoutine: restMappedDetails[currentIndex].orderInRoutine,
+                set: {
+                  set: restMappedDetails[currentIndex].currentSet,
+                  // actualReps: currentReps,
+                  // load: currentLoad ? parseInt(currentLoad) : undefined,
+                  unit: "pound",
+                },
+                target: restMappedDetails[currentIndex].target,
+                targetReps: restMappedDetails[currentIndex].reps ?? undefined,
+                time: restMappedDetails[currentIndex].time ?? undefined,
+              }
+              // console.log(currentSetData)
+              if (restMappedDetails[currentIndex].exerciseId) {
+                dispatch(recordSet(currentSetData))
+              }
+              if (restMappedDetails[index]) {
+                setCurrentIndex(index)
+                // setCurrentLoad("")
+                // setCurrentReps("")
+                if (restMappedDetails[index].time) {
+                  const newTime = restMappedDetails[index].time.includes("min") ? parseInt(restMappedDetails[index].time) * 60 : parseInt(restMappedDetails[index].time)
+                  handleResetCountdown(newTime)
+                  countdownRef.current?.resume();
+                }
+              }
+            }
+          }}
+          renderItem={({ item }: { item: CarouselExerciseItemType }) => {
+            const current = item.gif || item.img
+            const next = item.next
+            let rest = 0
+            if (item.rest) {
+              rest = item.rest.includes("min") ? parseInt(item.rest) * 60 : parseInt(item.rest)
+              // countdownRef2.current?.pause()
+              // countdownRef2.current?.reset(rest)
+            }
+            return (
+              <View className='h-full'>
+                <ImageBackground
+                  key={current}
+                  source={{ uri: current }}
+                  style={{ width: "100%", aspectRatio: 9/16, opacity: showStopwatch ? 1 : 0.5 }}
+                  contentFit="cover"
+                  transition={100}
+                >
+                {item.exerciseId ? (
+                  <View className="absolute bottom-4 inset-x-0 w-3/4">
+                    {/* <Text className='text-lg font-semibold ml-4 text-[#eeeeec]' style={styles.textShadow}>Current Exercise:</Text> */}
+                    <Text className='text-lg font-bold ml-4 text-[#eeeeec]' style={styles.textShadow}>{item.name}</Text>
+                    <View className='flex-row gap-x-4 gap-y-2 ml-4 flex-wrap w-2/3'>
+                      <View className='flex-col'>
+                        <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Sets</Text>
+                        <Text className='text-[#eeeeec]'>{item.currentSet}/{item.sets}</Text>
+                      </View>
+                      <View className='flex-col'>
+                        <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Target</Text>
+                        <Text className='text-[#eeeeec]'>{item.target === "reps" ? `${item.reps} reps`: item.time}</Text>
+                      </View>
+                      <View className={`flex-col min-w-20 ${item.notes ? "" : "invisible"}`}>
+                        <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Notes</Text>
+                        <Text className='text-[#eeeeec]'>{item.notes}</Text>
+                      </View>
+                      {/* <View className='flex-col'>
+                        <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Load Used</Text>
+                        <TextInput
+                          onTouchStart={(e) => e.stopPropagation()}
+                          maxLength={4}
+                          placeholder='Enter load'
+                          placeholderTextColor="#fff"
+                          caretHidden
+                          inputMode="numeric"
+                          underlineStyle={{ display: "none" }}
+                          contentStyle={{ color: "#e8e5dc", backgroundColor: "#565656", }}
+                          keyboardType="numeric"
+                          // dense
+                          style={{ height: 28, width: 84, fontSize: 14, paddingHorizontal: 8 }}
+                          selectionColor='#ffd700'
+                          value={currentLoad}
+                          onChangeText={setCurrentLoad}
+                        />
+                      </View>
+                      <View className='flex-col'>
+                        <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Reps Completed</Text>
+                        <TextInput
+                          onTouchStart={(e) => e.stopPropagation()}
+                          maxLength={4}
+                          placeholder='Enter reps'
+                          placeholderTextColor="#fff"
+                          caretHidden
+                          inputMode="numeric"
+                          underlineStyle={{ display: "none" }}
+                          contentStyle={{ color: "#e8e5dc", backgroundColor: "#565656", }}
+                          keyboardType="number-pad"
+                          // dense
+                          style={{ height: 28, width: 84, fontSize: 14, paddingHorizontal: 8 }}
+                          selectionColor='#ffd700'
+                          value={currentReps}
+                          onChangeText={setCurrentReps}
+                        />
+                      </View> */}
+                    </View>
+                  </View>
+                ) : (
+                  <View className="absolute bottom-56 inset-x-0">
+                    <CountdownTimer
+                      ref={countdownRef2}
+                      showPresetTimes={false}
+                      autoStart={false}
+                      showCustomInput={false}
+                      showControls={false}
+                      showReset={false}
+                      showPlay
+                      showSound={true}
+                      // defaultTime={1}
+                      defaultTime={rest}
+                    />
+                    <Text className='text-3xl font-semibold text-center text-[#eeeeec]' style={styles.textShadow}>Rest Period</Text>
+                  </View>
+                )}
+                {next && (
+                  <View className="absolute bottom-4 right-4">
+                    <ImageBackground
+                      key={next}
+                      source={{ uri: next }}
+                      style={{ width: 100, aspectRatio: 4/3, borderRadius: 4, alignSelf: 'center', opacity: 0.85 }}
+                      contentFit="cover"
+                      transition={100}
+                    >
+                      <Text className='left-1 text-lg font-semibold text-[#eeeeec]' style={styles.textShadow}>Up Next:</Text>
+                    </ImageBackground>
+                  </View>
+                )}
+                </ImageBackground>
+              </View>
+            )
+          }}
         />
-        <View className="absolute -top-2 inset-x-0">
+        {/* <View className='absolute top-14 left-36 z-10'>
+          <Text className='text-lg text-[#eeeeec]'>{`${(currentIndex/restMappedDetails.length*100).toPrecision(2)}%`}</Text>
+        </View> */}
+        <View className={`absolute z-10 ${showStopwatch ? "-top-1" : "top-20 inset-x-0"}`}>
           {showStopwatch ? (
             <Stopwatch
               ref={stopwatchRef}
               autoStart={true}
-              label='Elapsed Time'
+              // label='Elapsed Time'
               onStateChange={handleStopwatchStateChange}
             />
           ) : (
@@ -227,117 +450,8 @@ export default function WorkoutFlowScreen() {
             />
           )}
         </View>
-        {!restMappedDetails[currentIndex].gif && restMappedDetails[currentIndex].rest !== "None" ? (
-          <View className="absolute bottom-28 inset-x-0">
-            <CountdownTimer
-              ref={countdownRef}
-              showPresetTimes={false}
-              autoStart={true}
-              showCustomInput={false}
-              showControls={false}
-              showReset={false}
-              showPlay={false}
-              showSound={true}
-              onCountdownEnd={() => {
-                setCurrentIndex(currentIndex+1)
-                if (restMappedDetails[currentIndex+1].time) {
-                  const newTime = restMappedDetails[currentIndex+1].time.includes("min") ? parseInt(restMappedDetails[currentIndex+1].time) * 60 : parseInt(restMappedDetails[currentIndex+1].time)
-                  handleResetCountdown(newTime)
-                  // handleResetCountdown(5)
-                  countdownRef.current?.resume();
-                }
-              }}
-              // defaultTime={1}
-              defaultTime={restMappedDetails[currentIndex].rest.includes("min") ? parseInt(restMappedDetails[currentIndex].rest) * 60 : parseInt(restMappedDetails[currentIndex].rest)}
-            />
-            <Text className='text-3xl font-semibold text-center text-[#eeeeec]' style={styles.textShadow}>Rest Period</Text>
-          </View>
-        ) : (
-          <View className="absolute -bottom-2 inset-x-0">
-            {restMappedDetails[currentIndex].target === "time" && restMappedDetails[currentIndex].time !== "None" ? (
-              <CountdownTimer
-                ref={countdownRef}
-                showPresetTimes={false}
-                autoStart={true}
-                showCustomInput={false}
-                showControls={false}
-                showSound={true}
-                showPlay={false}
-                // showReset={false}
-                onStateChange={setCountdownRunning}
-                // defaultTime={1}
-                defaultTime={restMappedDetails[currentIndex].time.includes("min") ? parseInt(restMappedDetails[currentIndex].time) * 60 : parseInt(restMappedDetails[currentIndex].time)}
-              />
-            ) : null}
-            <Text className='text-lg font-semibold ml-4 text-[#eeeeec]' style={styles.textShadow}>Current Exercise:</Text>
-            <Text className='text-lg font-bold ml-4 text-[#eeeeec]' style={styles.textShadow}>{restMappedDetails[currentIndex].name}</Text>
-            
-            <View className='flex-row gap-x-4 gap-y-2 ml-4 flex-wrap w-2/3'>
-              <View className='flex-col'>
-                <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Sets</Text>
-                <Text className='text-[#eeeeec]'>{restMappedDetails[currentIndex].currentSet}/{restMappedDetails[currentIndex].sets}</Text>
-              </View>
-              <View className='flex-col'>
-                <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Target</Text>
-                <Text className='text-[#eeeeec]'>{restMappedDetails[currentIndex].target === "reps" ? `${restMappedDetails[currentIndex].reps} reps`: restMappedDetails[currentIndex].time}</Text>
-              </View>
-              <View className={`flex-col min-w-20 ${restMappedDetails[currentIndex].notes ? "" : "invisible"}`}>
-                <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Notes</Text>
-                <Text className='text-[#eeeeec]'>{restMappedDetails[currentIndex].notes}</Text>
-              </View>
-              <View className='flex-col'>
-                <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Load Used</Text>
-                <TextInput
-                  onTouchStart={(e) => e.stopPropagation()}
-                  maxLength={4}
-                  placeholder='Enter load'
-                  placeholderTextColor="#fff"
-                  caretHidden
-                  inputMode="numeric"
-                  underlineStyle={{ display: "none" }}
-                  contentStyle={{ color: "#e8e5dc", backgroundColor: "#565656", }}
-                  keyboardType="numeric"
-                  // dense
-                  style={{ height: 28, width: 84, fontSize: 14, paddingHorizontal: 8 }}
-                  selectionColor='#ffd700'
-                  value={currentLoad}
-                  onChangeText={setCurrentLoad}
-                />
-              </View>
-              <View className='flex-col'>
-                <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Reps Completed</Text>
-                <TextInput
-                  onTouchStart={(e) => e.stopPropagation()}
-                  maxLength={4}
-                  placeholder='Enter reps'
-                  placeholderTextColor="#fff"
-                  caretHidden
-                  inputMode="numeric"
-                  underlineStyle={{ display: "none" }}
-                  contentStyle={{ color: "#e8e5dc", backgroundColor: "#565656", }}
-                  keyboardType="number-pad"
-                  // dense
-                  style={{ height: 28, width: 84, fontSize: 14, paddingHorizontal: 8 }}
-                  selectionColor='#ffd700'
-                  value={currentReps}
-                  onChangeText={setCurrentReps}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-        {nextImage && (
-          <View className="absolute -bottom-2 right-4">
-            <Text className='relative top-6 z-10 text-lg font-semibold text-[#eeeeec]' style={styles.textShadow}>Up Next:</Text>
-            <Image
-              key={nextImage}
-              source={{ uri: nextImage }}
-              style={{ width: 100, aspectRatio: 4/3, borderRadius: 4, alignSelf: 'center', opacity: 0.7 }}
-              contentFit="cover"
-              transition={200}
-            />
-          </View>
-        )}
+      </ThemedView>
+      {restMappedDetails[currentIndex].exerciseId ? (
         <View className="absolute top-1/2 right-0 z-10">
           <IconButton
             icon="timer"
@@ -348,20 +462,32 @@ export default function WorkoutFlowScreen() {
               countdownRef.current?.reset(0)
             }}
           />
-          {restMappedDetails[currentIndex].exerciseId ? (
-            <IconButton
-              icon="comment-processing"
-              iconColor="#eeeeec"
-              onPress={() => {
-                // setContent(true)
-                open()
-              }}
-            />
-          ) : null}
+          <IconButton
+            icon="comment-processing"
+            iconColor="#eeeeec"
+            onPress={() => {
+              // setContent(true)
+              open()
+            }}
+          />
         </View>
-      </ThemedView>
-      <View className="flex-row w-full px-3 justify-between absolute" style={{ bottom: tabBarHeight ? tabBarHeight + 12 : 32 }}>
-        <FAB
+      ) : null}
+      {restMappedDetails[currentIndex].exerciseId ? (
+        <TouchableOpacity
+          className="absolute bottom-5 self-center z-10"
+          onPress={() => {
+            open()
+          }}
+        >
+          <IconButton
+            icon="chevron-up"
+            iconColor="#eeeeec"
+          />
+          <Text className="text-[#eeeeec] text-center relative bottom-5">Log Set</Text>
+        </TouchableOpacity>
+      ) : null}
+      <View className="flex-row-reverse w-full px-3 absolute" style={{ bottom: tabBarHeight ? tabBarHeight + 12 : 32 }}>
+        {/* <FAB
           icon="restart"
           size="medium"
           label="Restart"
@@ -389,8 +515,8 @@ export default function WorkoutFlowScreen() {
           }}
           color={Colors[colorScheme ?? 'light'].text}
           onPress={handleTogglePause}
-        />
-        <FAB
+        /> */}
+        {(currentIndex+1) === restMappedDetails.length && <FAB
           icon={nextImage && skip ? "timer-sand" : nextImage ? "chevron-right" : "flag-checkered"}
           size="medium"
           label={nextImage && skip ? "Skip" : nextImage ? "Next" : "Finish"}
@@ -411,8 +537,8 @@ export default function WorkoutFlowScreen() {
                 orderInRoutine: restMappedDetails[currentIndex].orderInRoutine,
                 set: {
                   set: restMappedDetails[currentIndex].currentSet,
-                  actualReps: currentReps,
-                  load: currentLoad ? parseInt(currentLoad) : undefined,
+                  // actualReps: currentReps,
+                  // load: currentLoad ? parseInt(currentLoad) : undefined,
                   unit: "pound",
                 },
                 target: restMappedDetails[currentIndex].target,
@@ -423,30 +549,19 @@ export default function WorkoutFlowScreen() {
               if (restMappedDetails[currentIndex].exerciseId) {
                 dispatch(recordSet(currentSetData))
               }
-              if (restMappedDetails[currentIndex+1]) {
-                setCurrentIndex(currentIndex+1)
-                setCurrentLoad("")
-                setCurrentReps("")
-                if (restMappedDetails[currentIndex+1].time) {
-                  const newTime = restMappedDetails[currentIndex+1].time.includes("min") ? parseInt(restMappedDetails[currentIndex+1].time) * 60 : parseInt(restMappedDetails[currentIndex+1].time)
-                  handleResetCountdown(newTime)
-                  countdownRef.current?.resume();
+              const workoutDuration = `${stopwatchRef.current?.getCurrentTime()}`
+              dispatch(finishWorkout(workoutDuration))
+              router.push({
+                pathname: "/(tabs)/(workouts)/reviewWorkout",
+                params: {
+                  workoutId,
+                  previewImgUri: workout.s3ImageKey,
+                  workoutName: workout.name,
                 }
-              } else {
-                const workoutDuration = `${stopwatchRef.current?.getCurrentTime()}`
-                dispatch(finishWorkout(workoutDuration))
-                router.push({
-                  pathname: "/(tabs)/(workouts)/reviewWorkout",
-                  params: {
-                    workoutId,
-                    previewImgUri: workout.s3ImageKey,
-                    workoutName: workout.name,
-                  }
-                })
-              }
+              })
             }
           }}
-        />
+        />}
       </View>
       <Dialog
         isVisible={openDialog}
@@ -483,7 +598,7 @@ export default function WorkoutFlowScreen() {
         onClose={() => setOpenDrawer(false)}
         showOverlay={false}
         drawerWidth={200}
-        position={{ bottom: 200, right: 16 }}
+        position={{ bottom: 220, right: 16 }}
       >
         <CountdownTimer
           // ref={countdownRef}
@@ -505,6 +620,17 @@ export default function WorkoutFlowScreen() {
 }
 
 const styles = StyleSheet.create({
+  mediaWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    width: '100%',  // Allows showing previous, current, and next items
+    position: 'absolute',
+  },
+  mediaItem: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
   headerBackgroud: {
     position: "absolute",
     left: 0,
@@ -517,8 +643,18 @@ const styles = StyleSheet.create({
     flex: 1,
     // backgroundSize: "cover",
     // backgroundPosition: "center",
-    height: 640,
+    // height: 640,
+    aspectRatio: 9/16,
     width: "100%"
+  },
+  shadow: {
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 4,
+      height: 4,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 4,
   },
   textShadow: {
     textShadowColor: "#000",
@@ -527,6 +663,15 @@ const styles = StyleSheet.create({
       height: 0.75,
     },
     textShadowRadius: 2,
+  },
+  input: {
+    // flex: 1,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    // height: 100,
+    overflow: 'scroll',
   },
   cancelButton: {
     width: "auto",

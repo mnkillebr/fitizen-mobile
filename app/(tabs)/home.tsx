@@ -91,8 +91,8 @@ export default function ProgramsScreen() {
 
   return (
     <ThemedSafeAreaView className='flex-1'>
-      <ThemedView className='px-4 h-full'>
-        <View className='flex-row justify-between items-center h-8'>
+      <ThemedView className='h-full'>
+        <View className='px-4 flex-row justify-between items-center h-8'>
           <View className='w-8'>
             <IconButton
               icon="menu"
@@ -131,7 +131,7 @@ export default function ProgramsScreen() {
           )}
         </View>
         <ScrollView showsVerticalScrollIndicator={false}>
-          <View className='mt-4 flex-row gap-4'>
+          <View className='px-4 mt-4 flex-row gap-4'>
             <View className='flex-1 items-center'>
               <HealthRings
                 rings={[
@@ -152,7 +152,7 @@ export default function ProgramsScreen() {
               <Text className='text-[#eeeeec] font-semibold'>Wearable</Text>
             </View>
           </View>
-          <View>
+          <View className='px-4'>
             <ThemedText className='mt-4' type="subtitle">Get a customized plan</ThemedText>
             <View className='h-52'>
               <ImageBackground
@@ -164,10 +164,13 @@ export default function ProgramsScreen() {
               </ImageBackground>
             </View>
           </View>
-          <View>
-            <ThemedText className='mt-4' type="subtitle">Workout Categories</ThemedText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className='flex-row gap-4'>
+          <View className=''>
+            <ThemedText className='px-4 mt-4' type="subtitle">Workout Categories</ThemedText>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            >
+              <View className='flex-row gap-4 px-4'>
                 {[...Array(4)].map((item, itemIdx) => {
                   return (
                     <View key={itemIdx} className='border items-center rounded-lg flex-1 justify-center size-32' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
@@ -185,9 +188,12 @@ export default function ProgramsScreen() {
             </ScrollView>
           </View>
           <View style={{ paddingBottom: 64 }}>
-            <ThemedText className='mt-4' type="subtitle">Badges</ThemedText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className='flex-row gap-4'>
+            <ThemedText className='px-4 mt-4' type="subtitle">Badges</ThemedText>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            >
+              <View className='flex-row gap-4 px-4'>
                 {[...Array(5)].map((item, itemIdx) => {
                   return (
                     <View key={itemIdx} className='border items-center rounded-lg flex-1 justify-center size-40' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>

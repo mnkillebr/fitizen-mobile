@@ -18,6 +18,7 @@ import { startWorkout } from "@/redux/slices/workoutLogSlice";
 import { useAuth } from "@/providers/auth-provider";
 import { ScrollView } from "react-native-gesture-handler";
 import { formatDuration } from "@/lib/utils";
+import { setCurrentProgramExercise } from "@/redux/slices/programWorkoutLogSlice";
 
 const { height, width } = Dimensions.get("window")
 
@@ -144,72 +145,72 @@ export default function WorkoutDetail() {
           onPress={() => router.back()}
         />
         {isLoading ? (
-          <View className="pb-4 h-52 justify-center">
-            <ActivityIndicator />
+          <View className="h-52 pt-6 justify-center">
+            <Skeleton key={`skeleton-title-description`} height={200} className='rounded-lg' skeletonStyle={{ backgroundColor: "gray" }} />
           </View>
         ) : (
           <View className="pb-4 h-52">
-          <View
-            id="carousel-component"
-            // className="flex flex-col"
-            // dataSet={{ kind: "basic-layouts", name: "normal" }}
-          >
-            <Carousel
-              ref={paginationRef}
-              loop={false}
-              width={width}
-              height={height}
-              snapEnabled={true}
-              pagingEnabled={true}
-              // autoPlayInterval={2000}
-              data={carouselData}
-              defaultScrollOffsetValue={scrollOffsetValue}
-              // style={{ width: "100%" }}
-              // onScrollStart={() => {
-              //   console.log("Scroll start");
-              // }}
-              // onScrollEnd={() => {
-              //   console.log("Scroll end");
-              // }}
-              onConfigurePanGesture={(g: { enabled: (arg0: boolean) => any }) => {
-                "worklet";
-                g.enabled(false);
-              }}
-              onSnapToItem={(index: number) => {
-                // console.log("current index:", index)
-                setPage(index)
-              }}
-              renderItem={({ item }) => (
-                <View className="h-52 px-4 justify-center">
-                  {item.title ? <ThemedText className="text-center" type="title" lightColor="#eeeeec" style={styles.title}>{workout?.name || 'Workout Details'}</ThemedText> : null}
-                  {item.subTitle ? (
-                    <>
-                      <ThemedText type="subtitle" className="text-center mb-2" lightColor="#eeeeec" style={styles.title}>{item.subTitle}</ThemedText>
-                      <ThemedText type="default" className="text-center" style={{ ...styles.text, lineHeight: 20 }} lightColor="#eeeeec">{item.description}</ThemedText>
-                    </>
-                  ) : null}
-                </View>
-              )}
-            />
-            <View className="flex flex-row mt-56 mb-2 justify-center gap-2">
-              {carouselData.map((item, idx) => (
-                <Pressable
-                  key={idx}
-                  onPress={() => {
-                    if (page === 0 && idx === 1) {
-                      setPage(idx)
-                      onPressPagination(idx)
-                    } else if (page === 1 && idx === 0) {
-                      setPage(idx)
-                      onPressPagination(-1)
-                    }
-                  }}
-                >
-                  <View className="size-3 rounded-full" style={{ backgroundColor: page === idx ? Colors[colorScheme ?? 'light'].tint : "#52525B" }} />
-                </Pressable>
-              ))}
+            <View
+              id="carousel-component"
+              // className="flex flex-col"
+              // dataSet={{ kind: "basic-layouts", name: "normal" }}
+            >
+              <Carousel
+                ref={paginationRef}
+                loop={false}
+                width={width}
+                height={height}
+                snapEnabled={true}
+                pagingEnabled={true}
+                // autoPlayInterval={2000}
+                data={carouselData}
+                defaultScrollOffsetValue={scrollOffsetValue}
+                // style={{ width: "100%" }}
+                // onScrollStart={() => {
+                //   console.log("Scroll start");
+                // }}
+                // onScrollEnd={() => {
+                //   console.log("Scroll end");
+                // }}
+                onConfigurePanGesture={(g: { enabled: (arg0: boolean) => any }) => {
+                  "worklet";
+                  g.enabled(false);
+                }}
+                onSnapToItem={(index: number) => {
+                  // console.log("current index:", index)
+                  setPage(index)
+                }}
+                renderItem={({ item }) => (
+                  <View className="h-52 px-4 justify-center">
+                    {item.title ? <ThemedText className="text-center" type="title" lightColor="#eeeeec" style={styles.title}>{workout?.name || 'Workout Details'}</ThemedText> : null}
+                    {item.subTitle ? (
+                      <>
+                        <ThemedText type="subtitle" className="text-center mb-2" lightColor="#eeeeec" style={styles.title}>{item.subTitle}</ThemedText>
+                        <ThemedText type="default" className="text-center" style={{ ...styles.text, lineHeight: 20 }} lightColor="#eeeeec">{item.description}</ThemedText>
+                      </>
+                    ) : null}
+                  </View>
+                )}
+              />
+              <View className="flex flex-row mt-56 mb-2 justify-center gap-2">
+                {carouselData.map((item, idx) => (
+                  <Pressable
+                    key={idx}
+                    onPress={() => {
+                      if (page === 0 && idx === 1) {
+                        setPage(idx)
+                        onPressPagination(idx)
+                      } else if (page === 1 && idx === 0) {
+                        setPage(idx)
+                        onPressPagination(-1)
+                      }
+                    }}
+                  >
+                    <View className="size-3 rounded-full" style={{ backgroundColor: page === idx ? Colors[colorScheme ?? 'light'].tint : "#52525B" }} />
+                  </Pressable>
+                ))}
+              </View>
             </View>
-          </View>
           </View>
         )}
         <View className="flex-1 mt-8" style={{ paddingBottom: (tabBarHeight-8) }}>
@@ -365,6 +366,7 @@ export default function WorkoutDetail() {
                 color="black"
                 onPress={() => {
                   dispatch(startWorkout(workoutId as string))
+                  dispatch(setCurrentProgramExercise(undefined))
                   router.navigate(`/workout?workoutId=${workoutId}`)
                 }}
               />
