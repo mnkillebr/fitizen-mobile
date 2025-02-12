@@ -106,6 +106,8 @@ interface FitnessSettingsProps {
 
 export default function FitnessSettings({ fitnessProfile, isLoading, isRefetching, refetch, saveProfile }: FitnessSettingsProps) {
   const colorScheme = useColorScheme();
+  const [selectedHeightUnit, setSelectedHeightUnit] = useState<"in" | "cm">("in");
+  const [height, setHeight] = useState("")
   const [selectedUnit, setSelectedUnit] = useState<"lbs" | "kgs">("lbs");
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [parqAnswers, setParqAnswers] = useState<Record<string, boolean>>({});
@@ -177,6 +179,10 @@ export default function FitnessSettings({ fitnessProfile, isLoading, isRefetchin
         return resultObj
       }, {})
       const incomingUnit = fitnessProfile.unit === "pound" ? "lbs" : "kgs"
+      const incomingHeightUnit = fitnessProfile.heightUnit === "inches" ? "in" : "cm"
+      setSelectedUnit(incomingUnit)
+      setSelectedHeightUnit(incomingHeightUnit)
+      setHeight(`${fitnessProfile.height}`)
       setSelectedGoals(incomingFitnessGoals ?? [])
       setParqAnswers(incomingParQAnswers ?? {})
       setWeights({
@@ -236,6 +242,55 @@ export default function FitnessSettings({ fitnessProfile, isLoading, isRefetchin
         }
       >
         <View className="border rounded-md p-4 mb-2" style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+          <ThemedText type="defaultSemiBold">Height</ThemedText>
+          <Text className='text-gray-400'>Set your height</Text>
+          <View className='flex-row my-1'>
+            <CheckBox
+              checked={selectedHeightUnit === "in"}
+              onPress={() => setSelectedHeightUnit("in")}
+              checkedIcon="dot-circle-o"
+              uncheckedIcon="circle-o"
+              checkedColor="#ffd700"
+              containerStyle={{ padding: 0, backgroundColor: "none" }}
+              title="Inches (in)"
+              textStyle={{ color: Colors[colorScheme ?? "light"].text, fontWeight: 500 }}
+            />
+            <CheckBox
+              checked={selectedHeightUnit === "cm"}
+              onPress={() => setSelectedHeightUnit("cm")}
+              checkedIcon="dot-circle-o"
+              uncheckedIcon="circle-o"
+              checkedColor="#ffd700"
+              containerStyle={{ padding: 0, backgroundColor: "none" }}
+              title="Centimeters (cm)"
+              textStyle={{ color: Colors[colorScheme ?? "light"].text, fontWeight: 500 }}
+            />
+          </View>
+          <View className='flex-col'>
+            <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>Height</ThemedText>
+            <TextInput
+              style={[styles.input, { color: Colors[colorScheme ?? "light"].text }]}
+              placeholder={`Enter height in ${selectedHeightUnit === "in" ? "inches" : "centimeters"}`}
+              placeholderTextColor="#78716c"
+              defaultValue={fitnessProfile.height}
+              value={height}
+              onChangeText={(text) => setHeight(text)}
+              selectionColor="#fff"
+              keyboardType="numeric"
+              maxLength={3}
+              autoComplete="off"
+              // onFocus={() => setIsFocused({
+              //   ...isFocused,
+              //   first: true,
+              // })}
+              // onBlur={() => setIsFocused({
+              //   ...isFocused,
+              //   first: false,
+              // })}
+            />
+          </View>
+        </View>
+        <View className="border rounded-md p-4 my-2" style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
           <ThemedText type="defaultSemiBold">Weight Goals</ThemedText>
           <Text className='text-gray-400'>Set your current and target weights</Text>
           <View className='flex-row my-1'>
@@ -591,6 +646,8 @@ export default function FitnessSettings({ fitnessProfile, isLoading, isRefetchin
           const updatedFitnessProfile = {
             action: "updateUserProfile",
             unit: selectedUnit,
+            heightUnit: selectedHeightUnit,
+            height: height,
             currentWeight: weights.current,
             targetWeight: weights.target,
             "fat-loss": selectedGoals.includes("fat-loss"),
