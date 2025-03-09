@@ -231,7 +231,7 @@ export default function FitnessSettings({ fitnessProfile, isLoading, isRefetchin
   // console.log("fitness settings", fitnessProfile, weights)
   return (
     <View className="flex-col gap-y-4 h-full pb-12">
-      <Text className='text-gray-400'>Keep your fitness profile up to date</Text>
+      <Text className='dark:text-gray-400'>Keep your fitness profile up to date</Text>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={

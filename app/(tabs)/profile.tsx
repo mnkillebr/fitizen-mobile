@@ -23,96 +23,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { api, apiClient } from '@/lib/api';
 import FitnessSettings from '@/components/FitnessSettings';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-
-const fitGoals = [
-  "Fat Loss",
-  "Build Muscle",
-  "Improve Balance",
-  "Learn New Skills",
-  "Endurance",
-  "Lose Weight",
-  "Improve Flexibility",
-]
-
-const PARQ_QUESTIONS = [
-  {
-    id: "heart-condition",
-    question: "Has your doctor ever said that you have a heart condition and that you should only perform physical activity recommended by a doctor?"
-  },
-  {
-    id: "chest-pain-activity",
-    question: "Do you feel pain in your chest when you perform physical activity?"
-  },
-  {
-    id: "chest-pain-no-activity",
-    question: "In the past month, have you had chest pain when you were not performing any physical activity?"
-  },
-  {
-    id: "balance-consciousness",
-    question: "Do you lose your balance because of dizziness or do you ever lose consciousness?"
-  },
-  {
-    id: "bone-joint",
-    question: "Do you have a bone or joint problem that could be made worse by a change in your physical activity?"
-  },
-  {
-    id: "blood-pressure-meds",
-    question: "Is your doctor currently prescribing any medication for your blood pressure or for a heart condition?"
-  },
-  {
-    id: "other-reasons",
-    question: "Do you know of any other reason why you should not engage in physical activity?"
-  }
-];
-
-const GENERAL_HISTORY = {
-  occupational: [
-    {
-      id: "extended-sitting",
-      question: "Does your occupation require extended periods of sitting?"
-    },
-    {
-      id: "repetitive-movements",
-      question: "Does your occupation require repetitive movements?"
-    },
-    {
-      id: "heel-shoes",
-      question: "Does your occupation require you to wear shoes with a heel (e.g., dress shoes)?"
-    },
-    {
-      id: "mental-stress",
-      question: "Does your occupation cause you mental stress?"
-    }
-  ],
-  recreational: [
-    {
-      id: "physical-activities",
-      question: "Do you partake in any recreational physical activities (golf, skiing, etc.)?"
-    },
-    {
-      id: "hobbies",
-      question: "Do you have any additional hobbies (reading, video games, etc.)?"
-    }
-  ],
-  medical: [
-    {
-      id: "injuries-pain",
-      question: "Have you ever had any injuries or chronic pain?"
-    },
-    {
-      id: "surgeries",
-      question: "Have you ever had any surgeries?"
-    },
-    {
-      id: "chronic-disease",
-      question: "Has a medical doctor ever diagnosed you with a chronic disease, such as heart disease, hypertension, high cholesterol, or diabetes?"
-    },
-    {
-      id: "medications",
-      question: "Are you currently taking any medication?"
-    }
-  ]
-};
+import { Alert } from 'react-native';
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme();
@@ -142,8 +53,23 @@ export default function ProfileScreen() {
     queryKey: ['userProfile'],
     queryFn: () => apiClient.profile.getUserProfile(),
   });
+
+  if (!isLoading && error) {
+    const errorMessage = error?.message
+    const alertPrompt = errorMessage === "Unauthorized"
+      ? "Unauthorized Request"
+      : errorMessage === "Invalid token"
+      ? "Session expired" : "Unauthorized"
+    Alert.alert(alertPrompt, 'You will be signed out', [
+      {
+        text: 'OK',
+        onPress: signOut 
+      },
+    ]);
+  }
   const uploadMutation = useMutation({
     mutationFn: (payload) => api.uploads.uploadToCloudinary(payload),
+    // mutationFn: (payload) => apiClient.profile.updateProfileImage(payload),
     onSuccess: (data) => {
       if (data) {
         console.log("upload data", data)
@@ -157,7 +83,7 @@ export default function ProfileScreen() {
     mutationFn: (payload) => apiClient.upload.generateSignature(payload),
     onSuccess: async (data) => {
       if (data) {
-        // console.log("signature data", data, file)
+        console.log("signature data", data, file)
         // uploadMutation.mutate({
         //   cloudName: data.cloudName,
         //   apiKey: data.apiKey,
@@ -187,7 +113,7 @@ export default function ProfileScreen() {
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images', 'videos'],
+      mediaTypes: ['images', /*'videos'*/],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
@@ -233,7 +159,7 @@ export default function ProfileScreen() {
               titleStyle={(active) => ({
                 fontSize: 12,
                 fontWeight: "bold",
-                color: active ? Colors[colorScheme ?? 'light'].tint : "white"
+                color: active ? Colors[colorScheme ?? 'light'].tint :  Colors[colorScheme ?? 'light'].text
               })}
             />
           ))}
@@ -241,7 +167,7 @@ export default function ProfileScreen() {
         <TabView value={tabIndex} onChange={setTabIndex} animationType="spring">
           <TabView.Item className="p-4 w-full">
             <View className="flex-col">
-              <Text className='text-gray-400'>Manage your account settings and user information</Text>
+              <Text className='dark:text-gray-400'>Manage your account settings and user information</Text>
               <ScrollView
                 showsVerticalScrollIndicator={false}
                 refreshControl={
@@ -271,14 +197,29 @@ export default function ProfileScreen() {
                       <Avatar.Accessory size={32} />
                     </Avatar>
                   )}
-                  <TouchableOpacity className='flex-row gap-2 mt-4 items-center' onPress={pickImage}>
+                  {/* <TouchableOpacity className='flex-row gap-2 mt-4 items-center' onPress={pickImage}>
                     <Icon
                       size={20}
                       source='camera'
                       color={Colors[colorScheme ?? "light"].text}
                     />
                     <ThemedText style={{ fontSize: 14 }}>{`${image ? "Change" : "Choose"} Profile Photo`}</ThemedText>
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
+                  {/* {file && <FAB
+                    label="Upload Image"
+                    style={{
+                      backgroundColor: Colors[colorScheme ?? 'light'].tint,
+                      shadowColor: colorScheme === "dark" ? "#fff" : "unset",
+                      marginTop: 8
+                    }}
+                    color="black"
+                    customSize={40}
+                    // disabled={firstName === session.user.firstName && lastName === session.user.lastName && email === session.user.email}
+                    onPress={() => {
+                      // uploadMutation.mutate(file)
+                      console.log(file.data)
+                    }}
+                  />} */}
                 </View>
                 <View className="border rounded-md p-4 mb-20" style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
                   <ThemedText type="defaultSemiBold">User Settings</ThemedText>

@@ -349,6 +349,22 @@ class ApiClient {
         body: JSON.stringify(payload),
       });
     },
+    updateProfileImage: async (file: ImagePickerAsset) => {
+      const endpoint = `/api/mobile/uploads`;
+      const formData = new FormData()
+      formData.append("file", file);
+      return this.fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        body: formData,
+      });
+    },
+    getUserWorkoutLogs: async () => {
+      const endpoint = `/api/mobile/home`;
+      return this.fetch(endpoint);
+    },
   }
 }
 

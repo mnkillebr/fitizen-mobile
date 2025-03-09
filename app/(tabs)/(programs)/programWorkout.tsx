@@ -563,9 +563,9 @@ export default function WorkoutFlowScreen() {
           >
             <IconButton
               icon="chevron-up"
-              iconColor="#eeeeec"
-            />
-            <Text className="text-[#eeeeec] text-center relative bottom-5">Log Set</Text>
+              iconColor={Colors[colorScheme ?? "light"].text}
+          />
+          <Text className="dark:text-[#eeeeec] text-center relative bottom-5">Log Set</Text>
           </TouchableOpacity>
         ) : null}
         <View className="flex-row-reverse w-full px-3 justify-between absolute" style={{ bottom: tabBarHeight ? tabBarHeight+12 : 32 }}>

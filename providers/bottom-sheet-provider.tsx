@@ -147,31 +147,31 @@ export function BottomSheetProvider({ children }: { children: React.ReactNode })
         <BottomSheetView style={styles.contentContainer}>
           {currentExercise ? (
             <View className='flex-row justify-between mb-2'>
-              <Text className='text-lg font-bold text-[#eeeeec] w-2/3' style={styles.textShadow}>{currentExercise.name}</Text>
+              <Text className='text-lg font-bold dark:text-[#eeeeec] w-2/3'>{currentExercise.name}</Text>
               <View className='flex-row w-1/3 justify-end' style={{ justifyContent: "flex-end" }}>
-                <Text className='text-lg text-[#eeeeec] mr-1' style={{ marginRight: 4 }}>Set</Text>
+                <Text className='text-lg dark:text-[#eeeeec] mr-1' style={{ marginRight: 4 }}>Set</Text>
                 {currentExercise.currentSet === parseInt(currentExercise.sets) ?
                   <Text className='text-lg font-bold text-[#ffd700]' style={{ color: Colors[colorScheme ?? "light"].tint }}>{currentExercise.currentSet} of </Text> :
-                  <Text className='text-lg text-[#eeeeec]'>{currentExercise.currentSet} of </Text>}
+                  <Text className='text-lg dark:text-[#eeeeec]'>{currentExercise.currentSet} of </Text>}
                 <Text className='text-lg font-bold text-[#ffd700]' style={{ color: Colors[colorScheme ?? "light"].tint }}>{currentExercise.sets}</Text>
               </View>
             </View>
           ) : null}
           {currentProgramExercise ? (
             <View className='flex-row justify-between mb-2'>
-              <Text className='text-lg font-bold text-[#eeeeec] w-2/3' style={styles.textShadow}>{currentProgramExercise.name}</Text>
+              <Text className='text-lg font-bold dark:text-[#eeeeec] w-2/3'>{currentProgramExercise.name}</Text>
               <View className='flex-row w-1/3 justify-end' style={{ justifyContent: "flex-end" }}>
-                <Text className='text-lg text-[#eeeeec] mr-1' style={{ marginRight: 4 }}>Set</Text>
+                <Text className='text-lg dark:text-[#eeeeec] mr-1' style={{ marginRight: 4 }}>Set</Text>
                 {currentProgramExercise.currentSet === parseInt(currentProgramExercise.sets) ?
                   <Text className='text-lg font-bold text-[#ffd700]' style={{ color: Colors[colorScheme ?? "light"].tint }}>{currentProgramExercise.currentSet} of </Text> :
-                  <Text className='text-lg text-[#eeeeec]'>{currentProgramExercise.currentSet} of </Text>}
+                  <Text className='text-lg dark:text-[#eeeeec]'>{currentProgramExercise.currentSet} of </Text>}
                 <Text className='text-lg font-bold text-[#ffd700]' style={{ color: Colors[colorScheme ?? "light"].tint }}>{currentProgramExercise.sets}</Text>
               </View>
             </View>
           ) : null}
           <View className='flex-row gap-2 mb-2'>
             <View className='flex-col flex-1'>
-              <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Load Used</Text>
+              <Text className='font-medium text-sm dark:text-[#eeeeec]'>Load Used</Text>
               <BottomSheetTextInput
                 // onTouchStart={(e) => e.stopPropagation()}
                 maxLength={4}
@@ -190,7 +190,7 @@ export function BottomSheetProvider({ children }: { children: React.ReactNode })
               />
             </View>
             <View className='flex-col flex-1'>
-              <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Reps Completed</Text>
+              <Text className='font-medium text-sm dark:text-[#eeeeec]'>Reps Completed</Text>
               <BottomSheetTextInput
                 // onTouchStart={(e) => e.stopPropagation()}
                 maxLength={4}
@@ -209,7 +209,7 @@ export function BottomSheetProvider({ children }: { children: React.ReactNode })
               />
             </View>
           </View>
-          <Text className='font-medium text-sm text-[#eeeeec]' style={styles.textShadow}>Notes</Text>
+          <Text className='font-medium text-sm dark:text-[#eeeeec]'>Notes</Text>
           <BottomSheetTextInput
             value={text}
             onChangeText={(val) => {

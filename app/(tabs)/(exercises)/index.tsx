@@ -18,6 +18,7 @@ import AnimatedDrawer from '@/components/AnimatedDrawer';
 import { Dimensions } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useAuth } from '@/providers/auth-provider';
+import { Alert } from 'react-native';
 
 const { height, width } = Dimensions.get("window");
 
@@ -44,6 +45,20 @@ export default function LibraryScreen() {
     isRefetching
   } = useInfiniteExercises(query);
 
+  if (!isLoading && error) {
+    const errorMessage = error?.message
+    const alertPrompt = errorMessage === "Unauthorized"
+      ? "Unauthorized Request"
+      : errorMessage === "Invalid token"
+      ? "Session expired" : "Unauthorized"
+    Alert.alert(alertPrompt, 'You will be signed out', [
+      {
+        text: 'OK',
+        onPress: signOut 
+      },
+    ]);
+  }
+
   const flatData = data?.pages.flatMap(page => page.exercises) ?? [];
   // console.log("exercises data", data)
   return (
@@ -58,7 +73,7 @@ export default function LibraryScreen() {
               onPress={() => setOpenDrawer(!openDrawer)}
             />
           </View>
-          <Text className='text-[#eeeeec] font-bold text-lg'>Fitizen</Text>
+          <Text className='dark:text-[#eeeeec] font-bold text-lg'>Fitizen</Text>
           {session?.user?.profilePhotoUrl ? (
 
             <TouchableOpacity

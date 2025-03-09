@@ -99,7 +99,7 @@ export default function ProgramsScreen() {
               onPress={() => setOpenDrawer(!openDrawer)}
             />
           </View>
-          <Text className='text-[#eeeeec] font-bold text-lg'>Fitizen</Text>
+          <Text className='dark:text-[#eeeeec] font-bold text-lg'>Fitizen</Text>
           {session?.user?.profilePhotoUrl ? (
 
             <TouchableOpacity

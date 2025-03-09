@@ -1,4 +1,4 @@
-import { StyleSheet, Platform, Text, View, ImageBackground, Pressable, FlatList, RefreshControl, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, Platform, Text, View, ImageBackground, Pressable, FlatList, RefreshControl, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -40,6 +40,20 @@ export default function WorkoutsScreen() {
     queryFn: () => apiClient.workouts.list(searchQuery)
   });
 
+  if (!isLoading && error) {
+    const errorMessage = error?.message
+    const alertPrompt = errorMessage === "Unauthorized"
+      ? "Unauthorized Request"
+      : errorMessage === "Invalid token"
+      ? "Session expired" : "Unauthorized"
+    Alert.alert(alertPrompt, 'You will be signed out', [
+      {
+        text: 'OK',
+        onPress: signOut 
+      },
+    ]);
+  }
+
   const workoutState = useSelector((state: RootState) => state.workoutLog)
   // console.log("workoutState", workouts)
   return (
@@ -54,7 +68,7 @@ export default function WorkoutsScreen() {
               onPress={() => setOpenDrawer(!openDrawer)}
             />
           </View>
-          <Text className='text-[#eeeeec] font-bold text-lg'>Fitizen</Text>
+          <Text className='dark:text-[#eeeeec] font-bold text-lg'>Fitizen</Text>
           {session?.user?.profilePhotoUrl ? (
 
             <TouchableOpacity

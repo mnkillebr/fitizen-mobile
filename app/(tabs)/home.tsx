@@ -21,6 +21,7 @@ import AnimatedDrawer from '@/components/AnimatedDrawer';
 import { Dimensions } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import HealthRings from '@/components/HealthRings';
+import { calculateAverageEntriesPerWeek, calculateWeeklyStreak } from '@/lib/utils';
 const fitizenLogo = require('@/assets/images/fitizen_logo.png')
 
 const { height, width } = Dimensions.get("window");
@@ -57,7 +58,7 @@ const Item = ({title}: ItemProps) => (
   </View>
 );
 
-export default function ProgramsScreen() {
+export default function HomeScreen() {
   const { signOut, session } = useAuth();
   const colorScheme = useColorScheme();
   const tabBarHeight = useBottomTabBarHeight();
@@ -65,16 +66,16 @@ export default function ProgramsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [openDrawer, setOpenDrawer] = useState(false);
   const {
-    data: programs,
+    data: userLogs,
     isLoading,
     error,
     refetch,
     isRefetching
   } = useQuery({
-    queryKey: ['programs', searchQuery],
-    queryFn: () => apiClient.programs.list(searchQuery),
+    queryKey: ['userLogs'],
+    queryFn: () => apiClient.profile.getUserWorkoutLogs(),
   });
-
+  // console.log("user logs", userLogs)
   if (!isLoading && error) {
     const errorMessage = error?.message
     const alertPrompt = errorMessage === "Unauthorized"
@@ -101,7 +102,7 @@ export default function ProgramsScreen() {
               onPress={() => setOpenDrawer(!openDrawer)}
             />
           </View>
-          <Text className='text-[#eeeeec] font-bold text-lg'>Fitizen</Text>
+          <Text className='dark:text-[#eeeeec] font-bold text-lg'>Fitizen</Text>
           {session?.user?.profilePhotoUrl ? (
 
             <TouchableOpacity
@@ -148,8 +149,8 @@ export default function ProgramsScreen() {
             <View className='flex-1 border items-center rounded-lg justify-center' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
               <Icon source="watch-variant" size={30} color={Colors[colorScheme ?? "light"].border} />
               {/* <Image source={require('@/assets/images/icon.png')} style={{ height: 50, width: 50 }} /> */}
-              <Text className='text-[#eeeeec] font-semibold'>Connect</Text>
-              <Text className='text-[#eeeeec] font-semibold'>Wearable</Text>
+              <Text className='dark:text-[#eeeeec] font-semibold mt-3'>Connect</Text>
+              <Text className='dark:text-[#eeeeec] font-semibold'>Wearable</Text>
             </View>
           </View>
           <View className='px-4'>
@@ -164,7 +165,7 @@ export default function ProgramsScreen() {
               </ImageBackground>
             </View>
           </View>
-          <View className=''>
+          {/* <View className=''>
             <ThemedText className='px-4 mt-4' type="subtitle">Workout Categories</ThemedText>
             <ScrollView
               horizontal
@@ -186,8 +187,8 @@ export default function ProgramsScreen() {
                 })}
               </View>
             </ScrollView>
-          </View>
-          <View style={{ paddingBottom: 64 }}>
+          </View> */}
+          {/* <View style={{ paddingBottom: 64 }}>
             <ThemedText className='px-4 mt-4' type="subtitle">Badges</ThemedText>
             <ScrollView
               horizontal
@@ -205,6 +206,34 @@ export default function ProgramsScreen() {
                 })}
               </View>
             </ScrollView>
+          </View> */}
+          <View style={{ paddingBottom: 64 }}>
+            <ThemedText className='px-4 mt-4' type="subtitle">Current Streaks</ThemedText>
+            {isLoading ? (
+              <View className='px-4'>
+                <Skeleton height={160} skeletonStyle={{ backgroundColor: "gray" }} />
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+              >
+                <View className='flex-row gap-4 px-4'>
+                  <View className='border items-center rounded-lg flex-1 justify-center size-40' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+                    <Text className='dark:text-[#eeeeec] font-semibold text-center text-5xl mb-3'>{userLogs ? userLogs.programLogs.length + userLogs.workoutLogs.length : 0}</Text>
+                    <Text className='dark:text-[#eeeeec] font-semibold text-center'>Total Workouts Completed</Text>
+                  </View>
+                  <View className='border items-center rounded-lg flex-1 justify-center size-40' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+                    <Text className='dark:text-[#eeeeec] font-semibold text-center text-5xl mb-3'>{userLogs ? calculateAverageEntriesPerWeek([...userLogs.programLogs, ...userLogs.workoutLogs], new Date(2025,1,8)).toFixed(1) : 0}</Text>
+                    <Text className='dark:text-[#eeeeec] font-semibold text-center'>Average Workouts per Week</Text>
+                  </View>
+                  <View className='border items-center rounded-lg flex-1 justify-center size-40' style={{ borderColor: Colors[colorScheme ?? "light"].border }}>
+                    <Text className='dark:text-[#eeeeec] font-semibold text-center text-5xl mb-3'>{userLogs ? calculateWeeklyStreak([...userLogs.programLogs, ...userLogs.workoutLogs], new Date(2025,1,8)) : 0}</Text>
+                    <Text className='dark:text-[#eeeeec] font-semibold text-center'>Weekly Streak</Text>
+                  </View>
+                </View>
+              </ScrollView>
+            )}
           </View>
         </ScrollView>
       </ThemedView>
